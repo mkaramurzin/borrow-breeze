@@ -3,36 +3,45 @@ Users should be able to edit loan items so that any changes in the actual loan a
 Users should be able to create and edit loan items with the optional fields "notes", "verification items", "partial payments", "warnings"
 Users should be able to click on loan items so that more details can be hidden or shown
 Users should see loan items color coded so that they know the status of a loan at a glance; Blue: ongoing, Beige: partially paid, Green: paid, Light Red: possible default, Red: Default, Purple: ongoing chargeback, Pink: successful chargeback
+Loans that exceed the repay date should be automatically changed to a "possible default" status 
 Users should be able to filter loan items by status and repay date so they can avoid seeing irrelevant loans
 Users should be able to see how much money is available to lend out so they don't overestimate
 Users should be able to see details such as totals for interest collected and defaulted
 Users should be able to mark a loan item as partially paid so proper records are kept
 Users should be able to mark a loan item as paid only if the appropriate paid command is scraped so that loans are properly marked as paid with the loanbot
 Users should be able to mark a loan item as unpaid only if the appropriate unpaid command is scraped so that loans are properly marked as unpaid with the loanbot
+Users should be able to log distributions, equity investments, and transfers so that accurate records are kept
 Users should see autofill suggestions when entering a username so that it's easier to enter a new item with a repeat borrower
 Users should be able to see a changelog for each loan item so they can keep track of how a loan has progressed
 Users should be able to generate an excel sheet where each loan is a line item and each field a column
 
 
 Firebase database structure:
+Accounts (collection)
+    Account (document)
+        name (field)
+        active sum (field)
+        historic sum (field)
+
 Users (collection)
     User (document)
         Loans (collection)
             Loan (document)
-                Change Log (collection)
-                    Loan (document)
-                        username (field)
-                        platform (field)
-                        name (field)
-                        amount (field)
-                        repay amount (field)
-                        amount repaid (field)
-                        repay date (field)
-                        post link (field)
+                status (field)
+                account (field)
+                username (field)
+                platform (field)
+                name (field)
+                amount (field)
+                repay amount (field)
+                amount repaid (field)
+                repay date (field)
+                post link (field)
 
-                        notes (field)
-                        verification items (field)
-                        warnings (field)
+                notes (field)
+                verification items (field)
+                warnings (field)
+                changelog (field)
 
 
 Limitations encountered:
