@@ -32,8 +32,33 @@ class Database {
     return docRef.id;
   }
 
-  Future<List<Loan>> get loans async {
-    QuerySnapshot querySnapshot = await userCollection.doc(uid).collection('Loans').get();
+  Future<List<Loan>> getLoans({
+    String? status,
+    String? borrowerUsername,
+    DateTime? originationDate,
+    DateTime? repayDate,
+  }) async {
+    CollectionReference loansCollection = userCollection.doc(uid).collection('Loans');
+    Query loansQuery = loansCollection;
+    
+    if (status != null) {
+      loansQuery = loansQuery.where('status', isEqualTo: status);
+    }
+    
+    if (borrowerUsername != null) {
+      loansQuery = loansQuery.where('borrower username', isEqualTo: borrowerUsername);
+    }
+
+    if (originationDate != null) {
+      loansQuery = loansQuery.where('origination date', isEqualTo: originationDate);
+    }
+
+    if (repayDate != null) {
+      loansQuery = loansQuery.where('repay date', isEqualTo: repayDate);
+    }
+
+    QuerySnapshot querySnapshot = await loansQuery.get();
+
     return querySnapshot.docs.map((doc) {
       return Loan(
           docID: doc.id,
@@ -55,4 +80,5 @@ class Database {
       );
     }).toList();
   }
+
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:borrowbreeze/services/auth.dart';
 import 'package:borrowbreeze/wrapper.dart';
-import 'package:borrowbreeze/screens/loan_list.dart';
+import 'package:borrowbreeze/screens/loan_view.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
               initialRoute: '/',
               routes: {
                 '/': (context) => Wrapper(),
-                '/loanlist': (context) => LoanList(),
+                '/loanlist': (context) => LoanView(),
               },
             );
           } else if (snapshot.hasError) {
