@@ -16,9 +16,9 @@ class Loan {
   String requestLink;
 
   String notes;
-  List<String> verificationItems;
+  List verificationItems;
   int reminders;
-  List<String> changeLog;
+  List changeLog;
 
   Loan({
     this.docID = '',
