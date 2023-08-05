@@ -1,50 +1,142 @@
 import 'package:flutter/material.dart';
 import 'package:borrowbreeze/models/loan.dart';
 import 'package:intl/intl.dart'; // for date formatting
+import 'package:borrowbreeze/services/status_key.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:borrowbreeze/services/database.dart';
+import '../services/auth.dart';
 
-class LoanItem extends StatelessWidget {
+class LoanItem extends StatefulWidget {
   final Loan loan;
 
   LoanItem({required this.loan});
 
   @override
+  State<LoanItem> createState() => _LoanItemState();
+}
+
+class _LoanItemState extends State<LoanItem> {
+  final AuthService _auth = AuthService();
+  late TextEditingController notesController;
+
+  @override
+  void initState() {
+    super.initState();
+    notesController = TextEditingController(text: widget.loan.notes);
+  }
+
+  @override
+  void dispose() {
+    notesController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Card(
+      color: StatusKey.color(widget.loan.status),
       child: Column(
         children: <Widget>[
           ListTile(
-            title: Text('Loan Status: ${loan.status}', style: TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Column(
+            title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Lender Account: ${loan.lenderAccount}'),
-                Text('Borrower Username: ${loan.borrowerUsername}'),
-                Text('Financial Platform: ${loan.financialPlatform}'),
-                Text('Loan Amount: \$${loan.amount}'),
-                Text('Repay Amount: \$${loan.repayAmount}'),
-                Text('Amount Repaid: \$${loan.amountRepaid}'),
-                Text('Origination Date: ${DateFormat('MM-dd-yyyy').format(loan.originationDate.toDate())}'),
-                Text('Repay Date: ${DateFormat('MM-dd-yyyy').format(loan.repayDate.toDate())}'),
-                Text('Request Link: ${loan.requestLink}'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Lender Account: ${widget.loan.lenderAccount}'),
+                    Icon(Icons.arrow_circle_right),
+                    Text('Borrower Username: ${widget.loan.borrowerUsername}'),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Loan Amount: \$${widget.loan.amount}'),
+                    Text(
+                        'Amount Repaid: \$${widget.loan.amountRepaid} / \$${widget.loan.repayAmount}')
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                        'Origination Date: ${DateFormat('MM-dd-yyyy').format(widget.loan.originationDate.toDate())}'),
+                    Text(
+                        'Repay Date: ${DateFormat('MM-dd-yyyy').format(widget.loan.repayDate.toDate())}'),
+                  ],
+                ),
               ],
             ),
-            trailing: Icon(Icons.arrow_drop_down),
             onTap: () {
               // TODO navigate to edit
             },
           ),
           ExpansionTile(
-            expandedAlignment: Alignment.topLeft,
+            childrenPadding: EdgeInsets.symmetric(vertical: 2, horizontal: 10),
+            expandedCrossAxisAlignment: CrossAxisAlignment.start,
             title: Text(''),
             children: [
-              Text('Borrower Name: ${loan.borrowerName}'),
-              Text('Notes: ${loan.notes}'),
-              Text('Verification Items: ${loan.verificationItems.join(', ')}'),
-              Text('Reminders: ${loan.reminders}'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Text('Financial Platform: ${widget.loan.financialPlatform}'),
+                  Text('Borrower Name: ${widget.loan.borrowerName}'),
+                ],
+              ),
+              Container(
+                margin: EdgeInsets.symmetric(vertical: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: widget.loan.verificationItems.map((item) {
+                    return ElevatedButton(
+                      onPressed: () async {
+                        var urlString = item['url'];
+                        if (urlString != null) {
+                          var uri = Uri.parse(urlString);
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text('Could not launch $urlString')),
+                            );
+                          }
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('URL is null!')),
+                          );
+                        }
+                      },
+                      child: Text('${item['type']}'),
+                    );
+                  }).toList(),
+                ),
+              ),
+              Container(
+                margin: EdgeInsets.only(bottom: 10),
+                child: TextField(
+                  controller: notesController,
+                  maxLines: null, // Makes it multiline
+                  decoration: InputDecoration(
+                    filled: true, // This is important
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(5.0),
+                    ),
+                  ),
+                  onChanged: (value) async {
+                    widget.loan.notes = notesController.text;
+                    await Database(uid: _auth.user!.uid)
+                        .updateLoan(widget.loan);
+                  },
+                ),
+              ),
               ListView.builder(
                 shrinkWrap: true,
-                itemCount: loan.changeLog.length,
-                itemBuilder: (ctx, index) => Text('Change log ${index+1}: ${loan.changeLog[index]}'),
+                itemCount: widget.loan.changeLog.length,
+                itemBuilder: (ctx, index) => Text(
+                    'Change log ${index + 1}: ${widget.loan.changeLog[index]}'),
               ),
             ],
           ),

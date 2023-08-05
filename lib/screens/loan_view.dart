@@ -16,13 +16,17 @@ class _LoanViewState extends State<LoanView> {
   final AuthService _auth = AuthService();
   List<Loan>? loanList;
   Loan dummyLoan = Loan(
-      status: 'ongoing',
+      status: 'completed',
       financialPlatform: 'PayPal',
       borrowerUsername: 'Plungus',
       borrowerName: 'Fahad',
       amount: 200,
       repayAmount: 240,
       originationDate: Timestamp.now(),
+      verificationItems: [
+        {"type": "ID", "url": "https://matrix.redditspace.com/_matrix/media/r0/download/reddit.com/gf7c4a54acua1"},
+        {"type": "Photo", "url": "https://matrix.redditspace.com/_matrix/media/r0/download/reddit.com/akyk5o37dcua1"}
+      ],
       repayDate: Timestamp.now());
 
   @override
@@ -44,6 +48,8 @@ class _LoanViewState extends State<LoanView> {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double contentWidth = screenWidth > 600 ? 600 : screenWidth;
     return Scaffold(
         appBar: AppBar(
           title: Text('Borrow Breeze'),
@@ -86,16 +92,20 @@ class _LoanViewState extends State<LoanView> {
               loanList == null
                   ? CircularProgressIndicator() // Loading indicator while fetching data
                   : Expanded(
-                    child: Container(
-                        width: 600,
-                        child: ListView.builder(
-                          itemCount: loanList!.length,
-                          itemBuilder: (context, index) {
-                            return LoanItem(loan: loanList!.elementAt(index),);
-                          },
+                      child: ListView(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: (screenWidth - contentWidth) /
+                              2, // Center the content
                         ),
+                        children: loanList!
+                            .map((loan) => AnimatedContainer(
+                                  duration: Duration(milliseconds: 500),
+                                  width: contentWidth,
+                                  child: LoanItem(loan: loan),
+                                ))
+                            .toList(),
                       ),
-                  ),
+                    ),
             ],
           ),
         ));

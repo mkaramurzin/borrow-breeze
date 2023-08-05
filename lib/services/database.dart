@@ -81,4 +81,28 @@ class Database {
     }).toList();
   }
 
+  Future<void> updateLoan(Loan loan) async {
+    await userCollection
+        .doc(uid)
+        .collection('Loans')
+        .doc(loan.docID)
+        .update({
+      'status': loan.status,
+      'lender account': loan.lenderAccount,
+      'financial platform': loan.financialPlatform,
+      'borrower username': loan.borrowerUsername,
+      'borrower name': loan.borrowerName,
+      'amount': loan.amount,
+      'repay amount': loan.repayAmount,
+      'amount repaid': loan.amountRepaid,
+      'origination date': loan.originationDate,
+      'repay date': loan.repayDate,
+      'request link': loan.requestLink,
+      'notes': loan.notes,
+      'verification items': loan.verificationItems,
+      'reminders': loan.reminders,
+      'changelog': loan.changeLog
+    });
+  }
+
 }
