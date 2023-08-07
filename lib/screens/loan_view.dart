@@ -5,6 +5,8 @@ import 'package:borrowbreeze/models/loan.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+import '../widgets/loan_form.dart';
+
 class LoanView extends StatefulWidget {
   const LoanView({Key? key}) : super(key: key);
 
@@ -24,8 +26,16 @@ class _LoanViewState extends State<LoanView> {
       repayAmount: 240,
       originationDate: Timestamp.now(),
       verificationItems: [
-        {"type": "ID", "url": "https://matrix.redditspace.com/_matrix/media/r0/download/reddit.com/gf7c4a54acua1"},
-        {"type": "Photo", "url": "https://matrix.redditspace.com/_matrix/media/r0/download/reddit.com/akyk5o37dcua1"}
+        {
+          "type": "ID",
+          "url":
+              "https://matrix.redditspace.com/_matrix/media/r0/download/reddit.com/gf7c4a54acua1"
+        },
+        {
+          "type": "Photo",
+          "url":
+              "https://matrix.redditspace.com/_matrix/media/r0/download/reddit.com/akyk5o37dcua1"
+        }
       ],
       repayDate: Timestamp.now());
 
@@ -65,10 +75,14 @@ class _LoanViewState extends State<LoanView> {
             children: [
               GestureDetector(
                 onTap: () async {
-                  Database(uid: _auth.user!.uid).addLoan(dummyLoan);
-                  setState(() {
-                    fetchLoanList();
-                  });
+                  // Database(uid: _auth.user!.uid).addLoan(dummyLoan);
+                  // setState(() {
+                  //   fetchLoanList();
+                  // });
+                  showDialog(
+                    context: context,
+                    builder: (context) => LoanFormDialog(),
+                  );
                 },
                 child: MouseRegion(
                   cursor: SystemMouseCursors.click,
