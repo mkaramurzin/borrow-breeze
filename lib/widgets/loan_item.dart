@@ -1,3 +1,4 @@
+import 'package:borrowbreeze/widgets/loan_form.dart';
 import 'package:flutter/material.dart';
 import 'package:borrowbreeze/models/loan.dart';
 import 'package:intl/intl.dart'; // for date formatting
@@ -69,7 +70,10 @@ class _LoanItemState extends State<LoanItem> {
               ],
             ),
             onTap: () {
-              // TODO navigate to edit
+              showDialog(
+                context: context,
+                builder: (context) => LoanFormDialog(loan: widget.loan,),
+              );
             },
           ),
           ExpansionTile(

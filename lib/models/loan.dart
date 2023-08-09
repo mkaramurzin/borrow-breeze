@@ -8,9 +8,9 @@ class Loan {
   String borrowerUsername;
   String financialPlatform;
   String borrowerName;
-  int amount;
-  int repayAmount;
-  int amountRepaid;
+  double amount;
+  double repayAmount;
+  double amountRepaid;
   Timestamp originationDate;
   Timestamp repayDate;
   String requestLink;

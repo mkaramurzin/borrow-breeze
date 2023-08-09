@@ -1,23 +1,57 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:borrowbreeze/models/loan.dart';
+import 'package:borrowbreeze/services/database.dart';
+import 'package:borrowbreeze/services/auth.dart';
 
 class LoanFormDialog extends StatefulWidget {
+  final Loan? loan;
+
+  LoanFormDialog({this.loan});
+
   @override
   _LoanFormDialogState createState() => _LoanFormDialogState();
 }
 
 class _LoanFormDialogState extends State<LoanFormDialog> {
+  final AuthService _auth = AuthService();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   String? lenderAccount;
   String borrowerUsername = '';
   String? financialPlatform;
   String borrowerName = '';
-  int? loanAmount;
-  int? repayAmount;
+  double? loanAmount;
+  double? repayAmount;
   DateTime originationDate = DateTime.now();
   DateTime repayDate = DateTime.now().add(Duration(days: 21));
-  String? loanRequestLink;
+  String loanRequestLink = '';
+  String notes = '';
   List<Map<String, String>> verificationItems = [];
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.loan != null) {
+      lenderAccount = 'Account 1'; // widget.loan!.lenderAccount;
+      borrowerUsername = widget.loan!.borrowerUsername;
+      financialPlatform = 'PayPal'; // widget.loan!.financialPlatform;
+      borrowerName = widget.loan!.borrowerName;
+      loanAmount = widget.loan!.amount;
+      repayAmount = widget.loan!.repayAmount;
+      originationDate = widget.loan!.originationDate.toDate();
+      repayDate = widget.loan!.repayDate.toDate();
+      loanRequestLink = widget.loan!.requestLink;
+      notes = widget.loan!.notes;
+      verificationItems = (widget.loan!.verificationItems as List)
+          .map((item) => {
+                'label': item['type'] as String,
+                'url': item['url'] as String,
+              })
+          .toList();
+    }
+  }
 
   String formatDate(DateTime date) {
     return "${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}-${date.year}";
@@ -58,6 +92,10 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                           }
                           return null;
                         },
+                        decoration: InputDecoration(
+                          labelText: 'Lender Account',
+                          border: OutlineInputBorder(),
+                        ),
                       ),
                     ),
                     SizedBox(
@@ -65,9 +103,11 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                     ),
                     Expanded(
                       child: TextFormField(
+                        initialValue: borrowerUsername,
                         onChanged: (value) => borrowerUsername = value,
                         decoration: InputDecoration(
                           labelText: 'Borrower Username',
+                          border: OutlineInputBorder(),
                         ),
                       ),
                     ),
@@ -100,6 +140,10 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                           }
                           return null;
                         },
+                        decoration: InputDecoration(
+                          labelText: 'Financial Platform',
+                          border: OutlineInputBorder(),
+                        ),
                       ),
                     ),
                     SizedBox(
@@ -107,9 +151,11 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                     ),
                     Expanded(
                       child: TextFormField(
+                        initialValue: borrowerName,
                         onChanged: (value) => borrowerName = value,
                         decoration: InputDecoration(
                           labelText: 'Borrower Name',
+                          border: OutlineInputBorder(),
                         ),
                       ),
                     ),
@@ -122,22 +168,25 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                   children: [
                     Expanded(
                       child: TextFormField(
+                        initialValue:
+                            widget.loan != null ? loanAmount.toString() : '',
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           labelText: 'Loan Amount',
+                          border: OutlineInputBorder(),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter a loan amount';
                           }
-                          if (int.tryParse(value) == null ||
-                              int.parse(value) < 1) {
+                          if (double.tryParse(value) == null ||
+                              double.parse(value) < 1) {
                             return 'Please enter a valid number';
                           }
                           return null;
                         },
-                        onSaved: (value) {
-                          loanAmount = int.parse(value!);
+                        onChanged: (value) {
+                          loanAmount = double.parse(value);
                         },
                       ),
                     ),
@@ -146,22 +195,25 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                     ),
                     Expanded(
                       child: TextFormField(
+                        initialValue:
+                            widget.loan != null ? repayAmount.toString() : '',
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           labelText: 'Repay Amount',
+                          border: OutlineInputBorder(),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter a repay amount';
                           }
-                          if (int.tryParse(value) == null ||
-                              int.parse(value) < 1) {
+                          if (double.tryParse(value) == null ||
+                              double.parse(value) < 1) {
                             return 'Please enter a valid number';
                           }
                           return null;
                         },
-                        onSaved: (value) {
-                          repayAmount = int.parse(value!);
+                        onChanged: (value) {
+                          repayAmount = double.parse(value);
                         },
                       ),
                     ),
@@ -179,6 +231,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                         readOnly: true,
                         decoration: InputDecoration(
                           labelText: 'Origination Date',
+                          border: OutlineInputBorder(),
                         ),
                         onTap: () async {
                           DateTime? pickedDate = await showDatePicker(
@@ -207,6 +260,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                         readOnly: true,
                         decoration: InputDecoration(
                           labelText: 'Repay Date',
+                          border: OutlineInputBorder(),
                         ),
                         onTap: () async {
                           DateTime? pickedDate = await showDatePicker(
@@ -230,39 +284,64 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                   height: 20,
                 ),
                 TextFormField(
+                  initialValue: loanRequestLink,
                   onChanged: (value) => loanRequestLink = value,
                   decoration: InputDecoration(
                     labelText: 'Loan Request Link',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                SizedBox(
+                  height: 20,
+                ),
+                TextFormField(
+                  initialValue: notes,
+                  onChanged: (value) {
+                    notes = value;
+                  },
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    labelText: 'Notes',
+                    border: OutlineInputBorder(),
                   ),
                 ),
                 SizedBox(
                   height: 20,
                 ),
                 ...verificationItems.map((item) {
-                  return Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          initialValue: item['label'],
-                          decoration: InputDecoration(labelText: 'Label'),
+                  return Container(
+                    margin: EdgeInsets.symmetric(vertical: 5),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            initialValue: item['label'],
+                            decoration: InputDecoration(
+                              labelText: 'Label',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: TextFormField(
-                          initialValue: item['url'],
-                          decoration: InputDecoration(labelText: 'URL'),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: TextFormField(
+                            initialValue: item['url'],
+                            decoration: InputDecoration(
+                              labelText: 'URL',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
                         ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.delete),
-                        onPressed: () {
-                          setState(() {
-                            verificationItems.remove(item);
-                          });
-                        },
-                      ),
-                    ],
+                        IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () {
+                            setState(() {
+                              verificationItems.remove(item);
+                            });
+                          },
+                        ),
+                      ],
+                    ),
                   );
                 }).toList(),
                 Container(
@@ -278,10 +357,31 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                 ),
                 ElevatedButton(
                   child: Text('Submit'),
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-                      // Save and submit the form
-                      _formKey.currentState!.save();
+                      if (widget.loan != null) {
+                        // TODO implement changelog logic
+                        await Database(uid: _auth.user!.uid)
+                            .updateLoan(widget.loan!);
+                      } else {
+                        print(financialPlatform);
+                        print(loanAmount);
+                        await Database(uid: _auth.user!.uid).addLoan(Loan(
+                          status: 'ongoing',
+                          lenderAccount: lenderAccount!,
+                          financialPlatform: financialPlatform!,
+                          borrowerUsername: borrowerUsername,
+                          borrowerName: borrowerName,
+                          amount: loanAmount!,
+                          repayAmount: repayAmount!,
+                          originationDate: Timestamp.fromDate(originationDate),
+                          repayDate: Timestamp.fromDate(repayDate),
+                          requestLink: loanRequestLink,
+                          notes: notes,
+                          verificationItems: verificationItems,
+                        ));
+                      }
+                      Navigator.pop(context);
                     }
                   },
                 ),
