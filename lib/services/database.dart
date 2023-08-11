@@ -105,4 +105,16 @@ class Database {
     });
   }
 
+  Future<List<String>> fetchAccountNames() async {
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    QuerySnapshot accountSnapshot = await firestore.collection('Accounts').get();
+
+    List<String> accountNames = [];
+    for (QueryDocumentSnapshot accountDoc in accountSnapshot.docs) {
+      accountNames.add(accountDoc.get('name') as String);
+    }
+
+    return accountNames;
+  }
+
 }

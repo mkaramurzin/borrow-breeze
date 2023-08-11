@@ -18,7 +18,7 @@ class Loan {
   String notes;
   List verificationItems;
   int reminders;
-  List changeLog;
+  String changeLog;
 
   Loan({
     this.docID = '',
@@ -36,6 +36,6 @@ class Loan {
     this.notes = '',
     this.verificationItems = const [],
     this.reminders = 0,
-    this.changeLog = const [],
+    this.changeLog = '',
   });
 }

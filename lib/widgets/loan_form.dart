@@ -16,6 +16,7 @@ class LoanFormDialog extends StatefulWidget {
 class _LoanFormDialogState extends State<LoanFormDialog> {
   final AuthService _auth = AuthService();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  List accountNames = [];
 
   String? lenderAccount;
   String borrowerUsername = '';
@@ -32,11 +33,15 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
   @override
   void initState() {
     super.initState();
-
+    Database(uid: _auth.user!.uid).fetchAccountNames().then((names) {
+      setState(() {
+        accountNames = names;
+      });
+    });
     if (widget.loan != null) {
-      lenderAccount = 'Account 1'; // widget.loan!.lenderAccount;
+      lenderAccount = widget.loan!.lenderAccount;
       borrowerUsername = widget.loan!.borrowerUsername;
-      financialPlatform = 'PayPal'; // widget.loan!.financialPlatform;
+      financialPlatform = widget.loan!.financialPlatform;
       borrowerName = widget.loan!.borrowerName;
       loanAmount = widget.loan!.amount;
       repayAmount = widget.loan!.repayAmount;
@@ -46,7 +51,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
       notes = widget.loan!.notes;
       verificationItems = (widget.loan!.verificationItems as List)
           .map((item) => {
-                'label': item['type'] as String,
+                'label': item['label'] as String,
                 'url': item['url'] as String,
               })
           .toList();
@@ -75,12 +80,11 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                         onChanged: (newValue) {
                           if (newValue != null) {
                             setState(() {
-                              lenderAccount = newValue;
+                              lenderAccount = newValue as String;
                             });
                           }
                         },
-                        items: ['Account 1', 'Account 2', 'Account 3']
-                            .map((account) {
+                        items: accountNames.map((account) {
                           return DropdownMenuItem(
                             child: Text(account),
                             value: account,
@@ -360,26 +364,90 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                   onPressed: () async {
                     if (_formKey.currentState!.validate()) {
                       if (widget.loan != null) {
-                        // TODO implement changelog logic
+                        List<String> changes = [];
+                        changes.add(formatDate(DateTime.now()));
+                        if (widget.loan!.lenderAccount != lenderAccount) {
+                          changes.add(
+                              'LENDER ACCOUNT    ${widget.loan!.lenderAccount} -> $lenderAccount');
+                          widget.loan!.lenderAccount = lenderAccount!;
+                        }
+                        if (widget.loan!.borrowerUsername != borrowerUsername) {
+                          changes.add(
+                              'BORROWER USERNAME    ${widget.loan!.borrowerUsername} -> $borrowerUsername');
+                          widget.loan!.borrowerUsername = borrowerUsername;
+                        }
+                        if (widget.loan!.financialPlatform !=
+                            financialPlatform) {
+                          changes.add(
+                              'FINANCIAL PLATFORM    ${widget.loan!.financialPlatform} -> $financialPlatform');
+                          widget.loan!.financialPlatform = financialPlatform!;
+                        }
+                        if (widget.loan!.borrowerName != borrowerName) {
+                          changes.add(
+                              'BORROWER NAME    ${widget.loan!.borrowerName} -> $borrowerName');
+                          widget.loan!.borrowerName = borrowerName;
+                        }
+                        if (widget.loan!.amount != loanAmount) {
+                          changes.add(
+                              'LOAN AMOUNT    ${widget.loan!.amount} - > $loanAmount');
+                          widget.loan!.amount = loanAmount!;
+                        }
+                        if (widget.loan!.repayAmount != repayAmount) {
+                          changes.add(
+                              'REPAY AMOUNT    ${widget.loan!.repayAmount} -> $repayAmount');
+                          widget.loan!.repayAmount = repayAmount!;
+                        }
+                        if (widget.loan!.originationDate !=
+                            Timestamp.fromDate(originationDate)) {
+                          changes.add(
+                              'ORIGINATION DATE    ${formatDate(widget.loan!.originationDate.toDate())} -> ${formatDate(originationDate)}');
+                          widget.loan!.originationDate =
+                              Timestamp.fromDate(originationDate);
+                        }
+                        if (widget.loan!.repayDate !=
+                            Timestamp.fromDate(repayDate)) {
+                          changes.add(
+                              'REPAY DATE    ${formatDate(widget.loan!.repayDate.toDate())} -> ${formatDate(repayDate)}');
+                          widget.loan!.repayDate =
+                              Timestamp.fromDate(repayDate);
+                        }
+                        if (widget.loan!.requestLink != loanRequestLink) {
+                          changes.add(
+                              'LOAN REQUEST LINK    ${widget.loan!.requestLink} -> $loanRequestLink');
+                          widget.loan!.requestLink = loanRequestLink;
+                        }
+                        if (widget.loan!.verificationItems.length >
+                            verificationItems.length) {
+                          changes.add('VERIFICATION ITEMS    titem removed');
+                          widget.loan!.verificationItems = verificationItems;
+                        }
+                        if (widget.loan!.verificationItems.length <
+                            verificationItems.length) {
+                          changes.add('VERIFICATION ITEMS    item added');
+                          widget.loan!.verificationItems = verificationItems;
+                        }
+
+                        String changelogEntry = "${changes.join('\n')}\n\n";
+                        widget.loan!.changeLog += changelogEntry;
                         await Database(uid: _auth.user!.uid)
                             .updateLoan(widget.loan!);
                       } else {
-                        print(financialPlatform);
-                        print(loanAmount);
                         await Database(uid: _auth.user!.uid).addLoan(Loan(
-                          status: 'ongoing',
-                          lenderAccount: lenderAccount!,
-                          financialPlatform: financialPlatform!,
-                          borrowerUsername: borrowerUsername,
-                          borrowerName: borrowerName,
-                          amount: loanAmount!,
-                          repayAmount: repayAmount!,
-                          originationDate: Timestamp.fromDate(originationDate),
-                          repayDate: Timestamp.fromDate(repayDate),
-                          requestLink: loanRequestLink,
-                          notes: notes,
-                          verificationItems: verificationItems,
-                        ));
+                            status: 'ongoing',
+                            lenderAccount: lenderAccount!,
+                            financialPlatform: financialPlatform!,
+                            borrowerUsername: borrowerUsername,
+                            borrowerName: borrowerName,
+                            amount: loanAmount!,
+                            repayAmount: repayAmount!,
+                            originationDate:
+                                Timestamp.fromDate(originationDate),
+                            repayDate: Timestamp.fromDate(repayDate),
+                            requestLink: loanRequestLink,
+                            notes: notes,
+                            verificationItems: verificationItems,
+                            changeLog:
+                                '${formatDate(DateTime.now())}\nLoan Item Created\nLoan Amount: $loanAmount\nRepay Amount: $repayAmount\nRepay Date: $repayDate\n\n'));
                       }
                       Navigator.pop(context);
                     }

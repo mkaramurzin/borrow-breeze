@@ -32,6 +32,28 @@ class _LoanItemState extends State<LoanItem> {
     super.dispose();
   }
 
+  _showChangeLogDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Changelog'),
+          content: SingleChildScrollView(
+            child: Text(widget.loan.changeLog),
+          ),
+          actions: [
+            TextButton(
+              child: Text('Close'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -72,7 +94,9 @@ class _LoanItemState extends State<LoanItem> {
             onTap: () {
               showDialog(
                 context: context,
-                builder: (context) => LoanFormDialog(loan: widget.loan,),
+                builder: (context) => LoanFormDialog(
+                  loan: widget.loan,
+                ),
               );
             },
           ),
@@ -112,7 +136,7 @@ class _LoanItemState extends State<LoanItem> {
                           );
                         }
                       },
-                      child: Text('${item['type']}'),
+                      child: Text('${item['label']}'),
                     );
                   }).toList(),
                 ),
@@ -136,12 +160,15 @@ class _LoanItemState extends State<LoanItem> {
                   },
                 ),
               ),
-              ListView.builder(
-                shrinkWrap: true,
-                itemCount: widget.loan.changeLog.length,
-                itemBuilder: (ctx, index) => Text(
-                    'Change log ${index + 1}: ${widget.loan.changeLog[index]}'),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _showChangeLogDialog,
+                  child: Text('View Changelog'),
+                ),
               ),
+              SizedBox(
+                height: 6,
+              )
             ],
           ),
         ],

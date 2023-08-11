@@ -27,12 +27,12 @@ class _LoanViewState extends State<LoanView> {
       originationDate: Timestamp.now(),
       verificationItems: [
         {
-          "type": "ID",
+          "label": "ID",
           "url":
               "https://matrix.redditspace.com/_matrix/media/r0/download/reddit.com/gf7c4a54acua1"
         },
         {
-          "type": "Photo",
+          "label": "Photo",
           "url":
               "https://matrix.redditspace.com/_matrix/media/r0/download/reddit.com/akyk5o37dcua1"
         }
