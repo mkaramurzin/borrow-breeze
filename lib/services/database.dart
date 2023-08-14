@@ -1,3 +1,4 @@
+import 'package:borrowbreeze/models/filter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:borrowbreeze/models/loan.dart';
@@ -35,22 +36,35 @@ class Database {
   Future<List<Loan>> getLoans({
     String? status,
     String? borrowerUsername,
+    String? lenderAccount,
+    String? borrowerName,
     DateTime? originationDate,
     DateTime? repayDate,
   }) async {
-    CollectionReference loansCollection = userCollection.doc(uid).collection('Loans');
+    CollectionReference loansCollection =
+        userCollection.doc(uid).collection('Loans');
     Query loansQuery = loansCollection;
-    
+
     if (status != null) {
       loansQuery = loansQuery.where('status', isEqualTo: status);
     }
-    
+
     if (borrowerUsername != null) {
-      loansQuery = loansQuery.where('borrower username', isEqualTo: borrowerUsername);
+      loansQuery =
+          loansQuery.where('borrower username', isEqualTo: borrowerUsername);
+    }
+
+    if (lenderAccount != null) {
+      loansQuery = loansQuery.where('lender account', isEqualTo: lenderAccount);
+    }
+
+    if (borrowerName != null) {
+      loansQuery = loansQuery.where('borrower name', isEqualTo: borrowerName);
     }
 
     if (originationDate != null) {
-      loansQuery = loansQuery.where('origination date', isEqualTo: originationDate);
+      loansQuery =
+          loansQuery.where('origination date', isEqualTo: originationDate);
     }
 
     if (repayDate != null) {
@@ -76,17 +90,12 @@ class Database {
           notes: doc.get('notes'),
           verificationItems: doc.get('verification items'),
           reminders: doc.get('reminders'),
-          changeLog: doc.get('changelog')
-      );
+          changeLog: doc.get('changelog'));
     }).toList();
   }
 
   Future<void> updateLoan(Loan loan) async {
-    await userCollection
-        .doc(uid)
-        .collection('Loans')
-        .doc(loan.docID)
-        .update({
+    await userCollection.doc(uid).collection('Loans').doc(loan.docID).update({
       'status': loan.status,
       'lender account': loan.lenderAccount,
       'financial platform': loan.financialPlatform,
@@ -107,7 +116,8 @@ class Database {
 
   Future<List<String>> fetchAccountNames() async {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
-    QuerySnapshot accountSnapshot = await firestore.collection('Accounts').get();
+    QuerySnapshot accountSnapshot =
+        await firestore.collection('Accounts').get();
 
     List<String> accountNames = [];
     for (QueryDocumentSnapshot accountDoc in accountSnapshot.docs) {
@@ -117,4 +127,36 @@ class Database {
     return accountNames;
   }
 
+  Future saveFilter(LoanFilter filter, String filterName) async {
+    return await userCollection.doc(uid).collection('Filters').add({
+      'filter name': filterName,
+      'status': filter.status,
+      'borrowerUsername': filter.borrowerUsername,
+      'lenderAccount': filter.lenderAccount,
+      'borrowerName': filter.borrowerName,
+      'originationDate': filter.originationDate,
+      'repayDate': filter.repayDate
+    });
+  }
+
+  Future<List<LoanFilter>> getFilters() async {
+    // Reference to the Filters collection of the specific user
+    CollectionReference filtersCollection =
+        userCollection.doc(uid).collection('Filters');
+
+    QuerySnapshot querySnapshot = await filtersCollection.get();
+
+    return querySnapshot.docs.map((doc) {
+      return LoanFilter(
+        docID: doc.id,
+        filterName: doc.get('filter name'),
+        status: doc.get('status'),
+        lenderAccount: doc.get('lender account'),
+        borrowerUsername: doc.get('borrower username'),
+        borrowerName: doc.get('borrower name'),
+        originationDate: (doc.get('origination date') as Timestamp?)?.toDate(),
+        repayDate: (doc.get('repay date') as Timestamp?)?.toDate(),
+      );
+    }).toList();
+  }
 }

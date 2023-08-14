@@ -6,8 +6,9 @@ import 'package:borrowbreeze/services/auth.dart';
 
 class LoanFormDialog extends StatefulWidget {
   final Loan? loan;
+  final Function() onFormSubmit;
 
-  LoanFormDialog({this.loan});
+  LoanFormDialog({this.loan, required this.onFormSubmit});
 
   @override
   _LoanFormDialogState createState() => _LoanFormDialogState();
@@ -64,8 +65,9 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      child: SingleChildScrollView(
+    return AlertDialog(
+      title: Text('Add Loan'),
+      content: SingleChildScrollView(
         child: Form(
           key: _formKey,
           child: Padding(
@@ -449,6 +451,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                             changeLog:
                                 '${formatDate(DateTime.now())}\nLoan Item Created\nLoan Amount: $loanAmount\nRepay Amount: $repayAmount\nRepay Date: $repayDate\n\n'));
                       }
+                      widget.onFormSubmit();
                       Navigator.pop(context);
                     }
                   },

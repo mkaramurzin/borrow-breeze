@@ -13,7 +13,7 @@ class StatusKey {
         return Color.fromARGB(255, 255, 17, 0);
       case 'disputed':
         return Colors.purple;
-      case 'collected':
+      case 'refunded':
         return Colors.pink;
       default:
         return Colors.black;

@@ -44,5 +44,15 @@ Users (collection)
                 reminders (field)
                 changelog (field)
 
+        Filters (collection)
+            Filter (document)
+                filter name (field)
+                status (field)
+                borrowerUsername (field)
+                lenderAccount (field)
+                borrowerName (field)
+                originationDate (field)
+                repayDate (field)
+
 
 Limitations encountered:

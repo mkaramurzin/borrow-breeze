@@ -4,6 +4,8 @@ import 'package:borrowbreeze/services/auth.dart';
 import 'package:borrowbreeze/models/loan.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:borrowbreeze/models/filter.dart';
+import 'package:borrowbreeze/widgets/filter_dialog.dart';
 
 import '../widgets/loan_form.dart';
 
@@ -17,6 +19,7 @@ class LoanView extends StatefulWidget {
 class _LoanViewState extends State<LoanView> {
   final AuthService _auth = AuthService();
   List<Loan>? loanList;
+  LoanFilter currentFilter = LoanFilter();
   Loan dummyLoan = Loan(
       status: 'completed',
       financialPlatform: 'PayPal',
@@ -47,12 +50,57 @@ class _LoanViewState extends State<LoanView> {
 
   Future<void> fetchLoanList() async {
     if (_auth.user != null) {
-      final fetchedLoanList = await Database(uid: _auth.user!.uid).getLoans();
+      final fetchedLoanList = await Database(uid: _auth.user!.uid).getLoans(
+          status: currentFilter.status,
+          lenderAccount: currentFilter.lenderAccount,
+          borrowerUsername: currentFilter.borrowerUsername,
+          borrowerName: currentFilter.borrowerName,
+          originationDate: currentFilter.originationDate,
+          repayDate: currentFilter.repayDate);
       if (mounted) {
         setState(() {
           loanList = fetchedLoanList;
         });
       }
+    }
+  }
+
+  Future<void> openFilterDialog() async {
+    LoanFilter? result = await showDialog(
+      context: context,
+      builder: (context) => FilterDialog(currentFilter: currentFilter),
+    );
+
+    if (result != null) {
+      setState(() {
+        currentFilter = result;
+        fetchLoanList();
+      });
+    }
+  }
+
+  void menuOption(int option) async {
+    switch (option) {
+      case 0:
+        showDialog(
+          context: context,
+          builder: (context) => LoanFormDialog(
+            onFormSubmit: () {
+              fetchLoanList();
+              setState(() {});
+            },
+          ),
+        );
+        break;
+
+      case 1:
+        openFilterDialog();
+        break;
+
+      case 2:
+        await _auth.signOut();
+        Navigator.pushReplacementNamed(context, '/');
+        break;
     }
   }
 
@@ -64,45 +112,37 @@ class _LoanViewState extends State<LoanView> {
         appBar: AppBar(
           title: Text('Borrow Breeze'),
           actions: [
-            // PopupMenuButton(
-            //   icon: Icon(Icons.settings),
-
+            PopupMenuButton<int>(
+                onSelected: (item) {
+                  menuOption(item);
+                  setState(() {});
+                },
+                icon: Icon(Icons.settings),
+                position: PopupMenuPosition.under,
+                itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 0,
+                        child: Text('Add Loan'),
+                      ),
+                      PopupMenuItem(
+                        value: 1,
+                        child: Text('Apply Filter'),
+                      ),
+                      PopupMenuDivider(),
+                      PopupMenuItem(
+                        value: 2,
+                        child: Text("Sign Out"),
+                      ),
+                    ]),
+            // IconButton(
+            //   icon: Icon(Icons.filter_list),
+            //   onPressed: openFilterDialog,
             // )
           ],
         ),
         body: Center(
           child: Column(
             children: [
-              GestureDetector(
-                onTap: () async {
-                  // Database(uid: _auth.user!.uid).addLoan(dummyLoan);
-                  // setState(() {
-                  //   fetchLoanList();
-                  // });
-                  showDialog(
-                    context: context,
-                    builder: (context) => LoanFormDialog(),
-                  );
-                },
-                child: MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: Container(
-                    width: 500,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(5)),
-                      border: Border.all(
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons.add,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
               loanList == null
                   ? CircularProgressIndicator() // Loading indicator while fetching data
                   : Expanded(

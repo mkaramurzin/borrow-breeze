@@ -95,6 +95,7 @@ class _LoanItemState extends State<LoanItem> {
               showDialog(
                 context: context,
                 builder: (context) => LoanFormDialog(
+                  onFormSubmit: () => setState(() {}),
                   loan: widget.loan,
                 ),
               );
