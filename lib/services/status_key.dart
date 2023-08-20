@@ -5,6 +5,8 @@ class StatusKey {
     switch (status) {
       case 'ongoing':
         return Color.fromARGB(255, 82, 173, 248);
+      case 'partial':
+        return Color.fromARGB(255, 255, 214, 125);
       case 'overdue':
         return Color.fromARGB(255, 255, 107, 107);
       case 'completed':

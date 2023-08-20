@@ -1,13 +1,11 @@
 import 'package:borrowbreeze/models/filter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import 'package:borrowbreeze/models/loan.dart';
 
 class Database {
   final String uid;
   Database({required this.uid});
 
-  // collection references
   final CollectionReference userCollection =
       FirebaseFirestore.instance.collection('Users');
 
@@ -33,42 +31,52 @@ class Database {
     return docRef.id;
   }
 
-  Future<List<Loan>> getLoans({
-    String? status,
-    String? borrowerUsername,
-    String? lenderAccount,
-    String? borrowerName,
-    DateTime? originationDate,
-    DateTime? repayDate,
-  }) async {
+  Future<List<Loan>> getLoans({LoanFilter? filter}) async {
     CollectionReference loansCollection =
         userCollection.doc(uid).collection('Loans');
     Query loansQuery = loansCollection;
 
-    if (status != null) {
-      loansQuery = loansQuery.where('status', isEqualTo: status);
-    }
+    if (filter != null) {
+      if (filter?.status != null && filter.status!.isNotEmpty) {
+        loansQuery = loansQuery.where('status', whereIn: filter!.status);
+      }
 
-    if (borrowerUsername != null) {
-      loansQuery =
-          loansQuery.where('borrower username', isEqualTo: borrowerUsername);
-    }
+      if (filter?.borrowerUsername != null) {
+        loansQuery = loansQuery.where('borrower username',
+            isEqualTo: filter.borrowerUsername);
+      }
 
-    if (lenderAccount != null) {
-      loansQuery = loansQuery.where('lender account', isEqualTo: lenderAccount);
-    }
+      if (filter?.lenderAccount != null) {
+        loansQuery =
+            loansQuery.where('lender account', isEqualTo: filter.lenderAccount);
+      }
 
-    if (borrowerName != null) {
-      loansQuery = loansQuery.where('borrower name', isEqualTo: borrowerName);
-    }
+      if (filter?.borrowerName != null) {
+        loansQuery =
+            loansQuery.where('borrower name', isEqualTo: filter.borrowerName);
+      }
 
-    if (originationDate != null) {
-      loansQuery =
-          loansQuery.where('origination date', isEqualTo: originationDate);
-    }
+      if (filter?.originationDate != null) {
+        DateTime date = filter.originationDate!.toDate();
+        Timestamp startOfDay = Timestamp.fromDate(
+            DateTime(date.year, date.month, date.day, 0, 0, 0));
+        Timestamp endOfDay = Timestamp.fromDate(
+            DateTime(date.year, date.month, date.day, 23, 59, 59));
+        loansQuery = loansQuery
+            .where('origination date', isGreaterThanOrEqualTo: startOfDay)
+            .where('origination date', isLessThanOrEqualTo: endOfDay);
+      }
 
-    if (repayDate != null) {
-      loansQuery = loansQuery.where('repay date', isEqualTo: repayDate);
+      if (filter?.repayDate != null) {
+        DateTime date = filter.repayDate!.toDate();
+        Timestamp startOfDay = Timestamp.fromDate(
+            DateTime(date.year, date.month, date.day, 0, 0, 0));
+        Timestamp endOfDay = Timestamp.fromDate(
+            DateTime(date.year, date.month, date.day, 23, 59, 59));
+        loansQuery = loansQuery
+            .where('repay date', isGreaterThanOrEqualTo: startOfDay)
+            .where('repay date', isLessThanOrEqualTo: endOfDay);
+      }
     }
 
     QuerySnapshot querySnapshot = await loansQuery.get();
@@ -76,21 +84,21 @@ class Database {
     return querySnapshot.docs.map((doc) {
       return Loan(
           docID: doc.id,
-          status: doc.get('status'),
-          lenderAccount: doc.get('lender account'),
-          financialPlatform: doc.get('financial platform'),
-          borrowerUsername: doc.get('borrower username'),
-          borrowerName: doc.get('borrower name'),
-          amount: doc.get('amount'),
-          repayAmount: doc.get('repay amount'),
-          amountRepaid: doc.get('amount repaid'),
-          originationDate: doc.get('origination date'),
-          repayDate: doc.get('repay date'),
-          requestLink: doc.get('request link'),
-          notes: doc.get('notes'),
-          verificationItems: doc.get('verification items'),
-          reminders: doc.get('reminders'),
-          changeLog: doc.get('changelog'));
+          status: doc['status'] as String,
+          lenderAccount: doc['lender account'] as String,
+          financialPlatform: doc['financial platform'] as String,
+          borrowerUsername: doc['borrower username'] as String,
+          borrowerName: doc['borrower name'] as String,
+          amount: doc['amount'] as double,
+          repayAmount: doc['repay amount'] as double,
+          amountRepaid: doc['amount repaid'] as double,
+          originationDate: doc['origination date'] as Timestamp,
+          repayDate: doc['repay date'] as Timestamp,
+          requestLink: doc['request link'] as String,
+          notes: doc['notes'] as String,
+          verificationItems: doc['verification items'] as List,
+          reminders: doc['reminders'] as int,
+          changeLog: doc['changelog'] as String);
     }).toList();
   }
 
@@ -115,47 +123,73 @@ class Database {
   }
 
   Future<List<String>> fetchAccountNames() async {
-    FirebaseFirestore firestore = FirebaseFirestore.instance;
     QuerySnapshot accountSnapshot =
-        await firestore.collection('Accounts').get();
+        await FirebaseFirestore.instance.collection('Accounts').get();
 
-    List<String> accountNames = [];
-    for (QueryDocumentSnapshot accountDoc in accountSnapshot.docs) {
-      accountNames.add(accountDoc.get('name') as String);
-    }
-
-    return accountNames;
+    return accountSnapshot.docs
+        .map((accountDoc) => accountDoc['name'] as String)
+        .toList();
   }
 
-  Future saveFilter(LoanFilter filter, String filterName) async {
-    return await userCollection.doc(uid).collection('Filters').add({
+  Future<List<String>> fetchBorrowerNames() async {
+    CollectionReference loansCollection =
+        userCollection.doc(uid).collection('Loans');
+    QuerySnapshot querySnapshot = await loansCollection.get();
+
+    Set<String> uniqueNames = {};
+
+    for (var doc in querySnapshot.docs) {
+      if (doc['borrower name'] != null) {
+        uniqueNames.add(doc['borrower name'] as String);
+      }
+    }
+
+    return uniqueNames.toList();
+  }
+
+  Future<List<String>>fetchBorrowerUsernames() async {
+    CollectionReference loansCollection =
+        userCollection.doc(uid).collection('Loans');
+    QuerySnapshot querySnapshot = await loansCollection.get();
+
+    Set<String> uniqueUsernames = {};
+
+    for (var doc in querySnapshot.docs) {
+      if (doc['borrower username'] != null) {
+        uniqueUsernames.add(doc['borrower username'] as String);
+      }
+    }
+
+    return uniqueUsernames.toList();
+  }
+
+  Future<void> saveFilter(LoanFilter filter, String filterName) async {
+    await userCollection.doc(uid).collection('Filters').add({
       'filter name': filterName,
       'status': filter.status,
       'borrowerUsername': filter.borrowerUsername,
       'lenderAccount': filter.lenderAccount,
       'borrowerName': filter.borrowerName,
-      'originationDate': filter.originationDate,
-      'repayDate': filter.repayDate
+      'originationDates': filter.originationDate,
+      'repayDates': filter.repayDate
     });
   }
 
   Future<List<LoanFilter>> getFilters() async {
-    // Reference to the Filters collection of the specific user
     CollectionReference filtersCollection =
         userCollection.doc(uid).collection('Filters');
-
     QuerySnapshot querySnapshot = await filtersCollection.get();
 
     return querySnapshot.docs.map((doc) {
       return LoanFilter(
         docID: doc.id,
-        filterName: doc.get('filter name'),
-        status: doc.get('status'),
-        lenderAccount: doc.get('lender account'),
-        borrowerUsername: doc.get('borrower username'),
-        borrowerName: doc.get('borrower name'),
-        originationDate: (doc.get('origination date') as Timestamp?)?.toDate(),
-        repayDate: (doc.get('repay date') as Timestamp?)?.toDate(),
+        filterName: doc['filter name'] as String,
+        status: doc['status'] as List<String>,
+        lenderAccount: doc['lender account'] as String?,
+        borrowerUsername: doc['borrower username'] as String?,
+        borrowerName: doc['borrower name'] as String?,
+        originationDate: doc['origination date'] as Timestamp?,
+        repayDate: doc['repay date'] as Timestamp?,
       );
     }).toList();
   }

@@ -51,8 +51,8 @@ Users (collection)
                 borrowerUsername (field)
                 lenderAccount (field)
                 borrowerName (field)
-                originationDate (field)
-                repayDate (field)
+                originationDates (field)
+                repayDates (field)
 
 
 Limitations encountered:

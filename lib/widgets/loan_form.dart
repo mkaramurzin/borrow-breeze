@@ -26,7 +26,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
   double? loanAmount;
   double? repayAmount;
   DateTime originationDate = DateTime.now();
-  DateTime repayDate = DateTime.now().add(Duration(days: 21));
+  DateTime repayDate = DateTime.now().add(Duration(days: 1));
   String loanRequestLink = '';
   String notes = '';
   List<Map<String, String>> verificationItems = [];
@@ -108,23 +108,6 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                       width: 50,
                     ),
                     Expanded(
-                      child: TextFormField(
-                        initialValue: borrowerUsername,
-                        onChanged: (value) => borrowerUsername = value,
-                        decoration: InputDecoration(
-                          labelText: 'Borrower Username',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                Row(
-                  children: [
-                    Expanded(
                       child: DropdownButtonFormField(
                         value: financialPlatform,
                         onChanged: (newValue) {
@@ -152,6 +135,23 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                         ),
                       ),
                     ),
+                  ],
+                ),
+                SizedBox(
+                  height: 20,
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        initialValue: borrowerUsername,
+                        onChanged: (value) => borrowerUsername = value,
+                        decoration: InputDecoration(
+                          labelText: 'Borrower Username',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
                     SizedBox(
                       width: 50,
                     ),
@@ -163,6 +163,12 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                           labelText: 'Borrower Name',
                           border: OutlineInputBorder(),
                         ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a name';
+                          }
+                          return null;
+                        },
                       ),
                     ),
                   ],

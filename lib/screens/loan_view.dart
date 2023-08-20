@@ -50,16 +50,12 @@ class _LoanViewState extends State<LoanView> {
 
   Future<void> fetchLoanList() async {
     if (_auth.user != null) {
-      final fetchedLoanList = await Database(uid: _auth.user!.uid).getLoans(
-          status: currentFilter.status,
-          lenderAccount: currentFilter.lenderAccount,
-          borrowerUsername: currentFilter.borrowerUsername,
-          borrowerName: currentFilter.borrowerName,
-          originationDate: currentFilter.originationDate,
-          repayDate: currentFilter.repayDate);
+      final fetchedLoanList =
+          await Database(uid: _auth.user!.uid).getLoans(filter: currentFilter);
       if (mounted) {
         setState(() {
           loanList = fetchedLoanList;
+          print(loanList);
         });
       }
     }
