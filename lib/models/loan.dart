@@ -8,7 +8,7 @@ class Loan {
   String borrowerUsername;
   String financialPlatform;
   String borrowerName;
-  double amount;
+  double principal;
   double repayAmount;
   double amountRepaid;
   Timestamp originationDate;
@@ -27,7 +27,7 @@ class Loan {
     required this.financialPlatform,
     required this.borrowerUsername,
     required this.borrowerName,
-    required this.amount,
+    required this.principal,
     required this.repayAmount,
     this.amountRepaid = 0,
     required this.originationDate,

@@ -21,11 +21,11 @@ class _LoanViewState extends State<LoanView> {
   List<Loan>? loanList;
   LoanFilter currentFilter = LoanFilter();
   Loan dummyLoan = Loan(
-      status: 'completed',
+      status: 'ongoing',
       financialPlatform: 'PayPal',
       borrowerUsername: 'Plungus',
       borrowerName: 'Fahad',
-      amount: 200,
+      principal: 200,
       repayAmount: 240,
       originationDate: Timestamp.now(),
       verificationItems: [
@@ -78,15 +78,17 @@ class _LoanViewState extends State<LoanView> {
   void menuOption(int option) async {
     switch (option) {
       case 0:
-        showDialog(
-          context: context,
-          builder: (context) => LoanFormDialog(
-            onFormSubmit: () {
-              fetchLoanList();
-              setState(() {});
-            },
-          ),
-        );
+        await Database(uid: _auth.user!.uid).addLoan(dummyLoan);
+        fetchLoanList();
+        // showDialog(
+        //   context: context,
+        //   builder: (context) => LoanFormDialog(
+        //     onFormSubmit: () {
+        //       fetchLoanList();
+        //       setState(() {});
+        //     },
+        //   ),
+        // );
         break;
 
       case 1:
@@ -130,10 +132,6 @@ class _LoanViewState extends State<LoanView> {
                         child: Text("Sign Out"),
                       ),
                     ]),
-            // IconButton(
-            //   icon: Icon(Icons.filter_list),
-            //   onPressed: openFilterDialog,
-            // )
           ],
         ),
         body: Center(

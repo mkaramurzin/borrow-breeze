@@ -75,7 +75,7 @@ class _LoanItemState extends State<LoanItem> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Loan Amount: \$${widget.loan.amount}'),
+                    Text('Loan Amount: \$${widget.loan.principal}'),
                     Text(
                         'Amount Repaid: \$${widget.loan.amountRepaid} / \$${widget.loan.repayAmount}')
                   ],
@@ -92,13 +92,15 @@ class _LoanItemState extends State<LoanItem> {
               ],
             ),
             onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => LoanFormDialog(
-                  onFormSubmit: () => setState(() {}),
-                  loan: widget.loan,
-                ),
-              );
+              if (widget.loan.status != 'paid') {
+                showDialog(
+                  context: context,
+                  builder: (context) => LoanFormDialog(
+                    onFormSubmit: () => setState(() {}),
+                    loan: widget.loan,
+                  ),
+                );
+              }
             },
           ),
           ExpansionTile(

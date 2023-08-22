@@ -1,3 +1,4 @@
+import 'package:borrowbreeze/widgets/payment_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:borrowbreeze/models/loan.dart';
@@ -18,13 +19,16 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
   final AuthService _auth = AuthService();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   List accountNames = [];
+  bool showPartialPaymentField = false;
 
+  String status = 'ongoing';
   String? lenderAccount;
   String borrowerUsername = '';
   String? financialPlatform;
   String borrowerName = '';
   double? loanAmount;
   double? repayAmount;
+  double amountRepaid = 0;
   DateTime originationDate = DateTime.now();
   DateTime repayDate = DateTime.now().add(Duration(days: 1));
   String loanRequestLink = '';
@@ -40,12 +44,14 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
       });
     });
     if (widget.loan != null) {
+      status = widget.loan!.status;
       lenderAccount = widget.loan!.lenderAccount;
       borrowerUsername = widget.loan!.borrowerUsername;
       financialPlatform = widget.loan!.financialPlatform;
       borrowerName = widget.loan!.borrowerName;
-      loanAmount = widget.loan!.amount;
+      loanAmount = widget.loan!.principal;
       repayAmount = widget.loan!.repayAmount;
+      amountRepaid = widget.loan!.amountRepaid;
       originationDate = widget.loan!.originationDate.toDate();
       repayDate = widget.loan!.repayDate.toDate();
       loanRequestLink = widget.loan!.requestLink;
@@ -63,6 +69,99 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
     return "${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}-${date.year}";
   }
 
+  Future<void> onSubmit() async {
+    if (widget.loan != null) {
+      List<String> changes = [];
+      changes.add(formatDate(DateTime.now()));
+      if (widget.loan!.status != status) {
+        changes.add('STATUS    ${widget.loan!.status} -> $status');
+        widget.loan!.status = status;
+      }
+      if (widget.loan!.lenderAccount != lenderAccount) {
+        changes.add(
+            'LENDER ACCOUNT    ${widget.loan!.lenderAccount} -> $lenderAccount');
+        widget.loan!.lenderAccount = lenderAccount!;
+      }
+      if (widget.loan!.borrowerUsername != borrowerUsername) {
+        changes.add(
+            'BORROWER USERNAME    ${widget.loan!.borrowerUsername} -> $borrowerUsername');
+        widget.loan!.borrowerUsername = borrowerUsername;
+      }
+      if (widget.loan!.financialPlatform != financialPlatform) {
+        changes.add(
+            'FINANCIAL PLATFORM    ${widget.loan!.financialPlatform} -> $financialPlatform');
+        widget.loan!.financialPlatform = financialPlatform!;
+      }
+      if (widget.loan!.borrowerName != borrowerName) {
+        changes.add(
+            'BORROWER NAME    ${widget.loan!.borrowerName} -> $borrowerName');
+        widget.loan!.borrowerName = borrowerName;
+      }
+      if (widget.loan!.principal != loanAmount) {
+        changes.add('LOAN AMOUNT    ${widget.loan!.principal} - > $loanAmount');
+        widget.loan!.principal = loanAmount!;
+      }
+      if (widget.loan!.repayAmount != repayAmount) {
+        changes
+            .add('REPAY AMOUNT    ${widget.loan!.repayAmount} -> $repayAmount');
+        widget.loan!.repayAmount = repayAmount!;
+      }
+      if (widget.loan!.amountRepaid != amountRepaid) {
+        changes.add(
+            'AMOUNT REPAID    ${widget.loan!.amountRepaid} -> $amountRepaid');
+        widget.loan!.amountRepaid = amountRepaid;
+      }
+      if (widget.loan!.originationDate != Timestamp.fromDate(originationDate)) {
+        changes.add(
+            'ORIGINATION DATE    ${formatDate(widget.loan!.originationDate.toDate())} -> ${formatDate(originationDate)}');
+        widget.loan!.originationDate = Timestamp.fromDate(originationDate);
+      }
+      if (widget.loan!.repayDate != Timestamp.fromDate(repayDate)) {
+        changes.add(
+            'REPAY DATE    ${formatDate(widget.loan!.repayDate.toDate())} -> ${formatDate(repayDate)}');
+        widget.loan!.repayDate = Timestamp.fromDate(repayDate);
+        if (widget.loan!.status != 'defaulted') {
+          widget.loan!.status = 'extended';
+        }
+      }
+      if (widget.loan!.requestLink != loanRequestLink) {
+        changes.add(
+            'LOAN REQUEST LINK    ${widget.loan!.requestLink} -> $loanRequestLink');
+        widget.loan!.requestLink = loanRequestLink;
+      }
+      if (widget.loan!.verificationItems.length > verificationItems.length) {
+        changes.add('VERIFICATION ITEMS    titem removed');
+        widget.loan!.verificationItems = verificationItems;
+      }
+      if (widget.loan!.verificationItems.length < verificationItems.length) {
+        changes.add('VERIFICATION ITEMS    item added');
+        widget.loan!.verificationItems = verificationItems;
+      }
+
+      String changelogEntry = "${changes.join('\n')}\n\n";
+      widget.loan!.changeLog += changelogEntry;
+      await Database(uid: _auth.user!.uid).updateLoan(widget.loan!);
+    } else {
+      await Database(uid: _auth.user!.uid).addLoan(Loan(
+          status: 'ongoing',
+          lenderAccount: lenderAccount!,
+          financialPlatform: financialPlatform!,
+          borrowerUsername: borrowerUsername,
+          borrowerName: borrowerName,
+          principal: loanAmount!,
+          repayAmount: repayAmount!,
+          originationDate: Timestamp.fromDate(originationDate),
+          repayDate: Timestamp.fromDate(repayDate),
+          requestLink: loanRequestLink,
+          notes: notes,
+          verificationItems: verificationItems,
+          changeLog:
+              '${formatDate(DateTime.now())}\nLoan Item Created\nLoan Amount: $loanAmount\nRepay Amount: $repayAmount\nRepay Date: $repayDate\n\n'));
+    }
+    widget.onFormSubmit();
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -74,6 +173,51 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
             padding: EdgeInsets.all(8.0),
             child: Column(
               children: [
+                Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: widget.loan != null
+                        ? [
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      Color.fromARGB(255, 130, 206, 133)),
+                              onPressed: () {
+                                status = 'paid';
+                                amountRepaid = widget.loan!.repayAmount;
+                                onSubmit();
+                              },
+                              child: Text('Paid'),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      Color.fromARGB(255, 255, 214, 125)),
+                              onPressed: () async {
+                                double? enteredAmount = await showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return PaymentDialog(
+                                      onSubmit: () {
+                                        setState(() {
+                                          status = 'partial';
+                                        });
+                                      },
+                                    );
+                                  },
+                                );
+                                if (enteredAmount != null) {
+                                  status = 'partial';
+                                  amountRepaid += enteredAmount;
+                                  onSubmit();
+                                }
+                              },
+                              child: Text('Partial Payment'),
+                            ),
+                          ]
+                        : []),
+                SizedBox(
+                  height: 20,
+                ),
                 Row(
                   children: [
                     Expanded(
@@ -371,94 +515,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                   child: Text('Submit'),
                   onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-                      if (widget.loan != null) {
-                        List<String> changes = [];
-                        changes.add(formatDate(DateTime.now()));
-                        if (widget.loan!.lenderAccount != lenderAccount) {
-                          changes.add(
-                              'LENDER ACCOUNT    ${widget.loan!.lenderAccount} -> $lenderAccount');
-                          widget.loan!.lenderAccount = lenderAccount!;
-                        }
-                        if (widget.loan!.borrowerUsername != borrowerUsername) {
-                          changes.add(
-                              'BORROWER USERNAME    ${widget.loan!.borrowerUsername} -> $borrowerUsername');
-                          widget.loan!.borrowerUsername = borrowerUsername;
-                        }
-                        if (widget.loan!.financialPlatform !=
-                            financialPlatform) {
-                          changes.add(
-                              'FINANCIAL PLATFORM    ${widget.loan!.financialPlatform} -> $financialPlatform');
-                          widget.loan!.financialPlatform = financialPlatform!;
-                        }
-                        if (widget.loan!.borrowerName != borrowerName) {
-                          changes.add(
-                              'BORROWER NAME    ${widget.loan!.borrowerName} -> $borrowerName');
-                          widget.loan!.borrowerName = borrowerName;
-                        }
-                        if (widget.loan!.amount != loanAmount) {
-                          changes.add(
-                              'LOAN AMOUNT    ${widget.loan!.amount} - > $loanAmount');
-                          widget.loan!.amount = loanAmount!;
-                        }
-                        if (widget.loan!.repayAmount != repayAmount) {
-                          changes.add(
-                              'REPAY AMOUNT    ${widget.loan!.repayAmount} -> $repayAmount');
-                          widget.loan!.repayAmount = repayAmount!;
-                        }
-                        if (widget.loan!.originationDate !=
-                            Timestamp.fromDate(originationDate)) {
-                          changes.add(
-                              'ORIGINATION DATE    ${formatDate(widget.loan!.originationDate.toDate())} -> ${formatDate(originationDate)}');
-                          widget.loan!.originationDate =
-                              Timestamp.fromDate(originationDate);
-                        }
-                        if (widget.loan!.repayDate !=
-                            Timestamp.fromDate(repayDate)) {
-                          changes.add(
-                              'REPAY DATE    ${formatDate(widget.loan!.repayDate.toDate())} -> ${formatDate(repayDate)}');
-                          widget.loan!.repayDate =
-                              Timestamp.fromDate(repayDate);
-                        }
-                        if (widget.loan!.requestLink != loanRequestLink) {
-                          changes.add(
-                              'LOAN REQUEST LINK    ${widget.loan!.requestLink} -> $loanRequestLink');
-                          widget.loan!.requestLink = loanRequestLink;
-                        }
-                        if (widget.loan!.verificationItems.length >
-                            verificationItems.length) {
-                          changes.add('VERIFICATION ITEMS    titem removed');
-                          widget.loan!.verificationItems = verificationItems;
-                        }
-                        if (widget.loan!.verificationItems.length <
-                            verificationItems.length) {
-                          changes.add('VERIFICATION ITEMS    item added');
-                          widget.loan!.verificationItems = verificationItems;
-                        }
-
-                        String changelogEntry = "${changes.join('\n')}\n\n";
-                        widget.loan!.changeLog += changelogEntry;
-                        await Database(uid: _auth.user!.uid)
-                            .updateLoan(widget.loan!);
-                      } else {
-                        await Database(uid: _auth.user!.uid).addLoan(Loan(
-                            status: 'ongoing',
-                            lenderAccount: lenderAccount!,
-                            financialPlatform: financialPlatform!,
-                            borrowerUsername: borrowerUsername,
-                            borrowerName: borrowerName,
-                            amount: loanAmount!,
-                            repayAmount: repayAmount!,
-                            originationDate:
-                                Timestamp.fromDate(originationDate),
-                            repayDate: Timestamp.fromDate(repayDate),
-                            requestLink: loanRequestLink,
-                            notes: notes,
-                            verificationItems: verificationItems,
-                            changeLog:
-                                '${formatDate(DateTime.now())}\nLoan Item Created\nLoan Amount: $loanAmount\nRepay Amount: $repayAmount\nRepay Date: $repayDate\n\n'));
-                      }
-                      widget.onFormSubmit();
-                      Navigator.pop(context);
+                      onSubmit();
                     }
                   },
                 ),

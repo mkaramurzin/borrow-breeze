@@ -9,7 +9,9 @@ class StatusKey {
         return Color.fromARGB(255, 255, 214, 125);
       case 'overdue':
         return Color.fromARGB(255, 255, 107, 107);
-      case 'completed':
+      case 'extended':
+        return Color.fromARGB(255, 59, 129, 62);
+      case 'paid':
         return Color.fromARGB(255, 130, 206, 133);
       case 'defaulted':
         return Color.fromARGB(255, 255, 17, 0);

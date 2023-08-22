@@ -17,7 +17,7 @@ class Database {
       'financial platform': loan.financialPlatform,
       'borrower username': loan.borrowerUsername,
       'borrower name': loan.borrowerName,
-      'amount': loan.amount,
+      'amount': loan.principal,
       'repay amount': loan.repayAmount,
       'amount repaid': loan.amountRepaid,
       'origination date': loan.originationDate,
@@ -89,7 +89,7 @@ class Database {
           financialPlatform: doc['financial platform'] as String,
           borrowerUsername: doc['borrower username'] as String,
           borrowerName: doc['borrower name'] as String,
-          amount: doc['amount'] as double,
+          principal: doc['amount'] as double,
           repayAmount: doc['repay amount'] as double,
           amountRepaid: doc['amount repaid'] as double,
           originationDate: doc['origination date'] as Timestamp,
@@ -109,7 +109,7 @@ class Database {
       'financial platform': loan.financialPlatform,
       'borrower username': loan.borrowerUsername,
       'borrower name': loan.borrowerName,
-      'amount': loan.amount,
+      'amount': loan.principal,
       'repay amount': loan.repayAmount,
       'amount repaid': loan.amountRepaid,
       'origination date': loan.originationDate,
@@ -147,7 +147,7 @@ class Database {
     return uniqueNames.toList();
   }
 
-  Future<List<String>>fetchBorrowerUsernames() async {
+  Future<List<String>> fetchBorrowerUsernames() async {
     CollectionReference loansCollection =
         userCollection.doc(uid).collection('Loans');
     QuerySnapshot querySnapshot = await loansCollection.get();
