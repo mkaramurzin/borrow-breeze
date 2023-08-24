@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 class PaymentDialog extends StatefulWidget {
-  final Function() onSubmit;
-  const PaymentDialog({super.key, required this.onSubmit});
+  const PaymentDialog({super.key});
 
   @override
   State<PaymentDialog> createState() => _PaymentDialogState();
@@ -23,7 +22,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text("Partial Payment"),
+      title: Text("Enter Payment"),
       content: SingleChildScrollView(
         child: Column(
           children: [
@@ -32,7 +31,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
               controller: _controller,
               keyboardType: TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
-                labelText: 'Payment Amount',
+                labelText: 'Enter Amount',
                 border: OutlineInputBorder(),
               ),
             ),

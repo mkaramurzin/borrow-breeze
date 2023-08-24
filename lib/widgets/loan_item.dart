@@ -61,38 +61,38 @@ class _LoanItemState extends State<LoanItem> {
       child: Column(
         children: <Widget>[
           ListTile(
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Lender Account: ${widget.loan.lenderAccount}'),
-                    Icon(Icons.arrow_circle_right),
-                    Text('Borrower Username: ${widget.loan.borrowerUsername}'),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Loan Amount: \$${widget.loan.principal}'),
-                    Text(
-                        'Amount Repaid: \$${widget.loan.amountRepaid} / \$${widget.loan.repayAmount}')
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                        'Origination Date: ${DateFormat('MM-dd-yyyy').format(widget.loan.originationDate.toDate())}'),
-                    Text(
-                        'Repay Date: ${DateFormat('MM-dd-yyyy').format(widget.loan.repayDate.toDate())}'),
-                  ],
-                ),
-              ],
-            ),
-            onTap: () {
-              if (widget.loan.status != 'paid') {
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Lender Account: ${widget.loan.lenderAccount}'),
+                      Icon(Icons.arrow_circle_right),
+                      Text(
+                          'Borrower Username: ${widget.loan.borrowerUsername}'),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Loan Amount: \$${widget.loan.principal}'),
+                      Text(
+                          'Amount Repaid: \$${widget.loan.amountRepaid} / \$${widget.loan.repayAmount}')
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                          'Origination Date: ${DateFormat('MM-dd-yyyy').format(widget.loan.originationDate.toDate())}'),
+                      Text(
+                          'Repay Date: ${DateFormat('MM-dd-yyyy').format(widget.loan.repayDate.toDate())}'),
+                    ],
+                  ),
+                ],
+              ),
+              onTap: () {
                 showDialog(
                   context: context,
                   builder: (context) => LoanFormDialog(
@@ -100,9 +100,7 @@ class _LoanItemState extends State<LoanItem> {
                     loan: widget.loan,
                   ),
                 );
-              }
-            },
-          ),
+              }),
           ExpansionTile(
             childrenPadding: EdgeInsets.symmetric(vertical: 2, horizontal: 10),
             expandedCrossAxisAlignment: CrossAxisAlignment.start,

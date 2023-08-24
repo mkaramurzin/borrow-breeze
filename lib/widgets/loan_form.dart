@@ -69,6 +69,91 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
     return "${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}-${date.year}";
   }
 
+  List<Widget> _buildButtonsBasedOnStatus() {
+    ElevatedButton paidBtn = ElevatedButton(
+      style: ElevatedButton.styleFrom(
+          backgroundColor: Color.fromARGB(255, 130, 206, 133)),
+      onPressed: () {
+        status = 'paid';
+        amountRepaid = widget.loan!.repayAmount;
+        onSubmit();
+      },
+      child: Text('Paid'),
+    );
+    ElevatedButton partialBtn = ElevatedButton(
+      style: ElevatedButton.styleFrom(
+          backgroundColor: Color.fromARGB(255, 255, 214, 125)),
+      onPressed: () async {
+        double? enteredAmount = await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return PaymentDialog();
+          },
+        );
+        if (enteredAmount != null) {
+          if (status != 'extended') {
+            status = 'partial';
+          }
+          amountRepaid += enteredAmount;
+          onSubmit();
+        }
+      },
+      child: Text('Partial Payment'),
+    );
+    ElevatedButton defaultBtn = ElevatedButton(
+      style: ElevatedButton.styleFrom(
+          backgroundColor: Color.fromARGB(255, 231, 15, 0)),
+      onPressed: () {
+        // TODO deduct principal from 'profit' sum
+        // TODO add to 'total defaulted sum'
+        status = 'defaulted';
+        onSubmit();
+      },
+      child: Text('Default'),
+    );
+    ElevatedButton disputeBtn = ElevatedButton(
+      style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
+      onPressed: () {
+        // TODO add principal to 'pending chargebacks' sum
+        status = 'disputed';
+        onSubmit();
+      },
+      child: Text('Disputed'),
+    );
+    ElevatedButton refundBtn = ElevatedButton(
+      style: ElevatedButton.styleFrom(backgroundColor: Colors.pink),
+      onPressed: () async {
+        // TODO deduct principal from 'total defaulted sum'
+        // TODO deduct from 'pending chargebacks' sum
+        double? enteredAmount = await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return PaymentDialog();
+          },
+        );
+        if (enteredAmount != null) {
+          status = 'refunded';
+          amountRepaid += enteredAmount;
+          onSubmit();
+        }
+      },
+      child: Text('refunded'),
+    );
+
+    switch (widget.loan!.status) {
+      case 'ongoing':
+      case 'partial':
+      case 'extended':
+        return [paidBtn, partialBtn, defaultBtn];
+      case 'defaulted':
+        return [paidBtn, disputeBtn];
+      case 'disputed':
+        return [paidBtn, refundBtn];
+      default:
+        return [];
+    }
+  }
+
   Future<void> onSubmit() async {
     if (widget.loan != null) {
       List<String> changes = [];
@@ -165,7 +250,9 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Add Loan'),
+      title: widget.loan == null
+          ? Center(child: Text('Add Loan'))
+          : Center(child: Text('Edit Loan')),
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -176,44 +263,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                 Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: widget.loan != null
-                        ? [
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      Color.fromARGB(255, 130, 206, 133)),
-                              onPressed: () {
-                                status = 'paid';
-                                amountRepaid = widget.loan!.repayAmount;
-                                onSubmit();
-                              },
-                              child: Text('Paid'),
-                            ),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      Color.fromARGB(255, 255, 214, 125)),
-                              onPressed: () async {
-                                double? enteredAmount = await showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return PaymentDialog(
-                                      onSubmit: () {
-                                        setState(() {
-                                          status = 'partial';
-                                        });
-                                      },
-                                    );
-                                  },
-                                );
-                                if (enteredAmount != null) {
-                                  status = 'partial';
-                                  amountRepaid += enteredAmount;
-                                  onSubmit();
-                                }
-                              },
-                              child: Text('Partial Payment'),
-                            ),
-                          ]
+                        ? _buildButtonsBasedOnStatus()
                         : []),
                 SizedBox(
                   height: 20,
@@ -488,13 +538,16 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                             ),
                           ),
                         ),
-                        IconButton(
-                          icon: Icon(Icons.delete),
-                          onPressed: () {
-                            setState(() {
-                              verificationItems.remove(item);
-                            });
-                          },
+                        Visibility(
+                          visible: widget.loan == null,
+                          child: IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () {
+                              setState(() {
+                                verificationItems.remove(item);
+                              });
+                            },
+                          ),
                         ),
                       ],
                     ),

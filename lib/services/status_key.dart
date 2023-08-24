@@ -14,7 +14,7 @@ class StatusKey {
       case 'paid':
         return Color.fromARGB(255, 130, 206, 133);
       case 'defaulted':
-        return Color.fromARGB(255, 255, 17, 0);
+        return Color.fromARGB(255, 231, 15, 0);
       case 'disputed':
         return Colors.purple;
       case 'refunded':

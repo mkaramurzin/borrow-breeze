@@ -78,17 +78,17 @@ class _LoanViewState extends State<LoanView> {
   void menuOption(int option) async {
     switch (option) {
       case 0:
-        await Database(uid: _auth.user!.uid).addLoan(dummyLoan);
+        // await Database(uid: _auth.user!.uid).addLoan(dummyLoan);
         fetchLoanList();
-        // showDialog(
-        //   context: context,
-        //   builder: (context) => LoanFormDialog(
-        //     onFormSubmit: () {
-        //       fetchLoanList();
-        //       setState(() {});
-        //     },
-        //   ),
-        // );
+        showDialog(
+          context: context,
+          builder: (context) => LoanFormDialog(
+            onFormSubmit: () {
+              fetchLoanList();
+              setState(() {});
+            },
+          ),
+        );
         break;
 
       case 1:
