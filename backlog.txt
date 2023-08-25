@@ -54,5 +54,56 @@ Users (collection)
                 originationDates (field)
                 repayDates (field)
 
+8/23/2023: halfway through development
+what's missing:
+    - all business logic calculations
+        a. ROI
+        b. DTE
+        c. Payment Protection fee calculation
+        d. default rate
+        e. Working funds
+        f. Historic, Projected, and Operational data
+        g. Interest
+        h. Average loan principal
+        i. Average interest
+        j. Yearly, quarterly, and monthly business report
 
-Limitations encountered:
+    - all business logic sums
+        a. Total Historic, Projected, and Operational Profit
+        b. Total Expenses
+        c. Total $ Defaulted
+        d. Pending chargebacks
+        e. Total ongoing loans
+        f. Total Completed loans
+        g. Total $ lent
+        h. Total $ repaid
+        i. Total interest
+        j. Gross
+
+    - filter feature
+        a. ability to sort loans by data fields such as "repay date descending"
+        b. preset filters such as "loans due today", "loans due this week", "overdue, ongoing, and extended"
+
+    - loan item
+        a. embed business logic such as "ROI", "Duration", "Interest"
+
+    - High-level changelog to complement low-level changelog
+    - Reminder system
+    - Business Numbers display
+    - Miscellaneous Credit & Debit (Expenses) logging such as "Azure fee"
+
+Usability study 1
+Subject: Niku
+    Task #1: Create two loan items. Add a verification item to each loan.
+
+    Task #2: Mark a loan as paid
+
+    Task #3: Filter loans by the 'ongoing' status
+
+    Task #4: Change the repay date of the ongoing loan to a later date
+
+    Task #5: Mark a partial payment contribution for the extended loan
+
+    Task #6: Mark the same loan as defaulted
+
+    Task #7: Remove the verification items for the defaulted loan

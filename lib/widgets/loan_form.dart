@@ -158,7 +158,9 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
     if (widget.loan != null) {
       List<String> changes = [];
       changes.add(formatDate(DateTime.now()));
-      if (widget.loan!.status != status) {
+      if (widget.loan!.status != status &&
+          widget.loan!.status != 'paid' &&
+          widget.loan!.status != 'refunded') {
         changes.add('STATUS    ${widget.loan!.status} -> $status');
         widget.loan!.status = status;
       }
@@ -202,12 +204,13 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
         widget.loan!.originationDate = Timestamp.fromDate(originationDate);
       }
       if (widget.loan!.repayDate != Timestamp.fromDate(repayDate)) {
+        if (widget.loan!.status != 'defaulted' &&
+            repayDate.isAfter(widget.loan!.repayDate.toDate())) {
+          widget.loan!.status = 'extended';
+        }
         changes.add(
             'REPAY DATE    ${formatDate(widget.loan!.repayDate.toDate())} -> ${formatDate(repayDate)}');
         widget.loan!.repayDate = Timestamp.fromDate(repayDate);
-        if (widget.loan!.status != 'defaulted') {
-          widget.loan!.status = 'extended';
-        }
       }
       if (widget.loan!.requestLink != loanRequestLink) {
         changes.add(
@@ -241,7 +244,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
           notes: notes,
           verificationItems: verificationItems,
           changeLog:
-              '${formatDate(DateTime.now())}\nLoan Item Created\nLoan Amount: $loanAmount\nRepay Amount: $repayAmount\nRepay Date: $repayDate\n\n'));
+              '${DateTime.now()}\nLoan Item Created\nLoan Amount: $loanAmount\nRepay Amount: $repayAmount\nRepay Date: $formatDate(repayDate)\n\n'));
     }
     widget.onFormSubmit();
     Navigator.pop(context);
