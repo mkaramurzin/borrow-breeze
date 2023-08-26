@@ -93,17 +93,40 @@ what's missing:
     - Miscellaneous Credit & Debit (Expenses) logging such as "Azure fee"
 
 Usability study 1
+Video recording available on screencastify
 Subject: Niku
     Task #1: Create two loan items. Add a verification item to each loan.
+    - 2/5 rating
+    - 60+ seconds time on task
+    - unintuitive location to start task
 
     Task #2: Mark a loan as paid
+    - 3/5 rating
+    - took 15 seconds
+    - 4 click unrelated to the task
 
     Task #3: Filter loans by the 'ongoing' status
+    - 5/5
+    - took 5 seconds
+    - dropdowns guided the user
 
     Task #4: Change the repay date of the ongoing loan to a later date
+    - 4/5
+    - took 10 seconds
+    - 1 click unrelated to task
 
     Task #5: Mark a partial payment contribution for the extended loan
+    - 4/5
+    - took 5 seconds
+    - should've asked user to show me how he knows the partial payment he logged was registered
 
     Task #6: Mark the same loan as defaulted
+    - 5/5
 
     Task #7: Remove the verification items for the defaulted loan
+    - 0/5
+    - Bug prevented user from attempting the task
+
+Post-study feedback:
+    "The only time I was genuinely confused was at the very start when the homepage was blank."
+    "Creating a loan shouldn't be an option under the gear icon. I associate that icon with settings."

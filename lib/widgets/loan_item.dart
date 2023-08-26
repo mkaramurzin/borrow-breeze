@@ -77,8 +77,28 @@ class _LoanItemState extends State<LoanItem> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text('Loan Amount: \$${widget.loan.principal}'),
-                      Text(
-                          'Amount Repaid: \$${widget.loan.amountRepaid} / \$${widget.loan.repayAmount}')
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'Amount Repaid: ',
+                              style: TextStyle(fontSize: 16)
+                            ),
+                            TextSpan(
+                              text: '\$${widget.loan.amountRepaid}',
+                              style: DefaultTextStyle.of(context)
+                                  .style
+                                  .copyWith(
+                                      fontWeight:
+                                          FontWeight.bold, fontSize: 16),
+                            ),
+                            TextSpan(
+                              text: ' / \$${widget.loan.repayAmount}',
+                              style: TextStyle(fontSize: 16)
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                   Row(

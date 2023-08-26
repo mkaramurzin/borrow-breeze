@@ -110,6 +110,22 @@ class _LoanViewState extends State<LoanView> {
         appBar: AppBar(
           title: Text('Borrow Breeze'),
           actions: [
+            Container(
+              margin: EdgeInsets.symmetric(horizontal: 20.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  menuOption(0);
+                },
+                child: Text('Create Loan'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white, // Background color
+                  foregroundColor: Colors.blue, // Text color
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30.0),
+                  ),
+                ),
+              ),
+            ),
             PopupMenuButton<int>(
                 onSelected: (item) {
                   menuOption(item);
@@ -120,7 +136,7 @@ class _LoanViewState extends State<LoanView> {
                 itemBuilder: (context) => [
                       PopupMenuItem(
                         value: 0,
-                        child: Text('Add Loan'),
+                        child: Text('Create Loan'),
                       ),
                       PopupMenuItem(
                         value: 1,
@@ -136,24 +152,80 @@ class _LoanViewState extends State<LoanView> {
         ),
         body: Center(
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               loanList == null
                   ? CircularProgressIndicator() // Loading indicator while fetching data
-                  : Expanded(
-                      child: ListView(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: (screenWidth - contentWidth) /
-                              2, // Center the content
+                  : loanList!.isEmpty
+                      ? Column(
+                          children: [
+                            Text('No loans found',
+                                style: TextStyle(fontSize: 22)),
+                            SizedBox(
+                              height: 12,
+                            ),
+                            Container(
+                              width: 300,
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  menuOption(0);
+                                },
+                                child: Text(
+                                  'Create a Loan',
+                                  style: TextStyle(fontSize: 18),
+                                ),
+                                style: ButtonStyle(
+                                  side: MaterialStateProperty.resolveWith(
+                                      (states) => BorderSide(
+                                          color: Colors.blue, width: 2)),
+                                  padding: MaterialStateProperty.resolveWith(
+                                      (states) => EdgeInsets.symmetric(
+                                          vertical: 15.0, horizontal: 25.0)),
+                                  textStyle: MaterialStateProperty.resolveWith(
+                                      (states) => TextStyle(fontSize: 18)),
+                                ),
+                              ),
+                            ),
+                            Container(
+                              margin: EdgeInsets.only(top: 10),
+                              width: 300,
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  menuOption(1);
+                                },
+                                child: Text(
+                                  'Apply Filter',
+                                  style: TextStyle(fontSize: 18),
+                                ),
+                                style: ButtonStyle(
+                                  side: MaterialStateProperty.resolveWith(
+                                      (states) => BorderSide(
+                                          color: Colors.blue, width: 2)),
+                                  padding: MaterialStateProperty.resolveWith(
+                                      (states) => EdgeInsets.symmetric(
+                                          vertical: 15.0, horizontal: 25.0)),
+                                  textStyle: MaterialStateProperty.resolveWith(
+                                      (states) => TextStyle(fontSize: 18)),
+                                ),
+                              ),
+                            )
+                          ],
+                        )
+                      : Expanded(
+                          child: ListView(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: (screenWidth - contentWidth) /
+                                  2, // Center the content
+                            ),
+                            children: loanList!
+                                .map((loan) => AnimatedContainer(
+                                      duration: Duration(milliseconds: 500),
+                                      width: contentWidth,
+                                      child: LoanItem(loan: loan),
+                                    ))
+                                .toList(),
+                          ),
                         ),
-                        children: loanList!
-                            .map((loan) => AnimatedContainer(
-                                  duration: Duration(milliseconds: 500),
-                                  width: contentWidth,
-                                  child: LoanItem(loan: loan),
-                                ))
-                            .toList(),
-                      ),
-                    ),
             ],
           ),
         ));
