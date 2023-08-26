@@ -96,7 +96,7 @@ class Database {
           repayDate: doc['repay date'] as Timestamp,
           requestLink: doc['request link'] as String,
           notes: doc['notes'] as String,
-          verificationItems: doc['verification items'] as List,
+          verificationItems: (doc['verification items'] as List).map((item) => item as Map<String, dynamic>).toList(),
           reminders: doc['reminders'] as int,
           changeLog: doc['changelog'] as String);
     }).toList();

@@ -55,7 +55,6 @@ class _LoanViewState extends State<LoanView> {
       if (mounted) {
         setState(() {
           loanList = fetchedLoanList;
-          print(loanList);
         });
       }
     }
@@ -79,7 +78,8 @@ class _LoanViewState extends State<LoanView> {
     switch (option) {
       case 0:
         // await Database(uid: _auth.user!.uid).addLoan(dummyLoan);
-        fetchLoanList();
+        // fetchLoanList();
+
         showDialog(
           context: context,
           builder: (context) => LoanFormDialog(

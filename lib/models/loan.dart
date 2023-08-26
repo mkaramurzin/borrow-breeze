@@ -16,7 +16,7 @@ class Loan {
   String requestLink;
 
   String notes;
-  List verificationItems;
+  List<Map<String, dynamic>> verificationItems;
   int reminders;
   String changeLog;
 

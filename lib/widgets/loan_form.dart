@@ -69,6 +69,17 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
     return "${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}-${date.year}";
   }
 
+  bool containsItem(
+      List<Map<String, dynamic>> list, Map<String, dynamic> item) {
+    for (var listItem in list) {
+      if (listItem['label'] == item['label'] &&
+          listItem['url'] == item['url']) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   List<Widget> _buildButtonsBasedOnStatus() {
     ElevatedButton paidBtn = ElevatedButton(
       style: ElevatedButton.styleFrom(
@@ -217,14 +228,19 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
             'LOAN REQUEST LINK    ${widget.loan!.requestLink} -> $loanRequestLink');
         widget.loan!.requestLink = loanRequestLink;
       }
-      if (widget.loan!.verificationItems.length > verificationItems.length) {
-        changes.add('VERIFICATION ITEMS    titem removed');
-        widget.loan!.verificationItems = verificationItems;
+      for (var item in widget.loan!.verificationItems) {
+        if (!containsItem(verificationItems, item)) {
+          changes.add(
+              'VERIFICATION ITEM REMOVED:\nLabel: ${item['label']} URL: ${item['url']}');
+        }
       }
-      if (widget.loan!.verificationItems.length < verificationItems.length) {
-        changes.add('VERIFICATION ITEMS    item added');
-        widget.loan!.verificationItems = verificationItems;
+      for (var item in verificationItems) {
+        if (!containsItem(widget.loan!.verificationItems as List<Map<String, dynamic>>, item)) {
+          changes.add(
+              'VERIFICATION ITEM ADDED:\nLabel: ${item['label']} URL: ${item['url']}');
+        }
       }
+      widget.loan!.verificationItems = verificationItems;
 
       String changelogEntry = "${changes.join('\n')}\n\n";
       widget.loan!.changeLog += changelogEntry;
@@ -244,7 +260,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
           notes: notes,
           verificationItems: verificationItems,
           changeLog:
-              '${DateTime.now()}\nLoan Item Created\nLoan Amount: $loanAmount\nRepay Amount: $repayAmount\nRepay Date: $formatDate(repayDate)\n\n'));
+              '${DateTime.now()}\nLoan Item Created\nLoan Amount: $loanAmount\nRepay Amount: $repayAmount\nRepay Date: ${formatDate(repayDate)}\n\n'));
     }
     widget.onFormSubmit();
     Navigator.pop(context);
@@ -517,7 +533,9 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                 SizedBox(
                   height: 20,
                 ),
-                ...verificationItems.map((item) {
+                ...verificationItems.asMap().entries.map((entry) {
+                  int idx = entry.key;
+                  Map<String, String> item = entry.value;
                   return Container(
                     margin: EdgeInsets.symmetric(vertical: 5),
                     child: Row(
@@ -529,6 +547,11 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                               labelText: 'Label',
                               border: OutlineInputBorder(),
                             ),
+                            onChanged: (value) {
+                              setState(() {
+                                verificationItems[idx]['label'] = value;
+                              });
+                            },
                           ),
                         ),
                         SizedBox(width: 10),
@@ -539,15 +562,19 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                               labelText: 'URL',
                               border: OutlineInputBorder(),
                             ),
+                            onChanged: (value) {
+                              setState(() {
+                                verificationItems[idx]['url'] = value;
+                              });
+                            },
                           ),
                         ),
                         Visibility(
-                          visible: widget.loan == null,
                           child: IconButton(
                             icon: Icon(Icons.delete),
                             onPressed: () {
                               setState(() {
-                                verificationItems.remove(item);
+                                verificationItems.removeAt(idx);
                               });
                             },
                           ),
