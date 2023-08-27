@@ -27,6 +27,7 @@ class _LoanViewState extends State<LoanView> {
       borrowerName: 'Fahad',
       principal: 200,
       repayAmount: 240,
+      roi: 20,
       originationDate: Timestamp.now(),
       verificationItems: [
         {
@@ -40,7 +41,8 @@ class _LoanViewState extends State<LoanView> {
               "https://matrix.redditspace.com/_matrix/media/r0/download/reddit.com/akyk5o37dcua1"
         }
       ],
-      repayDate: Timestamp.now());
+      repayDate: Timestamp.now(),
+      duration: 10);
 
   @override
   void initState() {

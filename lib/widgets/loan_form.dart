@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:borrowbreeze/models/loan.dart';
 import 'package:borrowbreeze/services/database.dart';
 import 'package:borrowbreeze/services/auth.dart';
+import 'package:borrowbreeze/services/loan_logic.dart';
+import 'package:borrowbreeze/widgets/metrics_row.dart';
 
 class LoanFormDialog extends StatefulWidget {
   final Loan? loan;
@@ -29,8 +31,10 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
   double? loanAmount;
   double? repayAmount;
   double amountRepaid = 0;
+  double? roi;
   DateTime originationDate = DateTime.now();
   DateTime repayDate = DateTime.now().add(Duration(days: 1));
+  int duration = 1;
   String loanRequestLink = '';
   String notes = '';
   List<Map<String, String>> verificationItems = [];
@@ -52,8 +56,10 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
       loanAmount = widget.loan!.principal;
       repayAmount = widget.loan!.repayAmount;
       amountRepaid = widget.loan!.amountRepaid;
+      roi = widget.loan!.roi;
       originationDate = widget.loan!.originationDate.toDate();
       repayDate = widget.loan!.repayDate.toDate();
+      duration = widget.loan!.duration;
       loanRequestLink = widget.loan!.requestLink;
       notes = widget.loan!.notes;
       verificationItems = (widget.loan!.verificationItems as List)
@@ -63,6 +69,16 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
               })
           .toList();
     }
+  }
+
+  void updateMetrics() {
+    if (loanAmount != null && repayAmount != null) {
+      roi = LoanLogic.calculateRoiSingle(loanAmount!, repayAmount!);
+    }
+    if (originationDate != null && repayDate != null) {
+      duration = LoanLogic.calculateDuration(originationDate, repayDate);
+    }
+    setState(() {});
   }
 
   String formatDate(DateTime date) {
@@ -235,7 +251,9 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
         }
       }
       for (var item in verificationItems) {
-        if (!containsItem(widget.loan!.verificationItems as List<Map<String, dynamic>>, item)) {
+        if (!containsItem(
+            widget.loan!.verificationItems as List<Map<String, dynamic>>,
+            item)) {
           changes.add(
               'VERIFICATION ITEM ADDED:\nLabel: ${item['label']} URL: ${item['url']}');
         }
@@ -254,8 +272,10 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
           borrowerName: borrowerName,
           principal: loanAmount!,
           repayAmount: repayAmount!,
+          roi: roi!,
           originationDate: Timestamp.fromDate(originationDate),
           repayDate: Timestamp.fromDate(repayDate),
+          duration: duration!,
           requestLink: loanRequestLink,
           notes: notes,
           verificationItems: verificationItems,
@@ -279,11 +299,11 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
             padding: EdgeInsets.all(8.0),
             child: Column(
               children: [
-                Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: widget.loan != null
-                        ? _buildButtonsBasedOnStatus()
-                        : []),
+                widget.loan != null
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: _buildButtonsBasedOnStatus())
+                : MetricsRow(roi: roi, duration: duration),
                 SizedBox(
                   height: 20,
                 ),
@@ -411,7 +431,8 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                           return null;
                         },
                         onChanged: (value) {
-                          loanAmount = double.parse(value);
+                          loanAmount = double.tryParse(value);
+                          updateMetrics();
                         },
                       ),
                     ),
@@ -438,7 +459,8 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                           return null;
                         },
                         onChanged: (value) {
-                          repayAmount = double.parse(value);
+                          repayAmount = double.tryParse(value);
+                          updateMetrics();
                         },
                       ),
                     ),
@@ -468,9 +490,8 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                           );
                           if (pickedDate != null &&
                               pickedDate != originationDate) {
-                            setState(() {
-                              originationDate = pickedDate;
-                            });
+                            originationDate = pickedDate;
+                            updateMetrics();
                           }
                         },
                       ),
@@ -496,9 +517,8 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                                 days: 3650)), // 10 years into the future
                           );
                           if (pickedDate != null && pickedDate != repayDate) {
-                            setState(() {
-                              repayDate = pickedDate;
-                            });
+                            repayDate = pickedDate;
+                            updateMetrics();
                           }
                         },
                       ),

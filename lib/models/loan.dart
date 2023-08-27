@@ -11,8 +11,10 @@ class Loan {
   double principal;
   double repayAmount;
   double amountRepaid;
+  double roi;
   Timestamp originationDate;
   Timestamp repayDate;
+  int duration;
   String requestLink;
 
   String notes;
@@ -29,9 +31,11 @@ class Loan {
     required this.borrowerName,
     required this.principal,
     required this.repayAmount,
+    required this.roi,
     this.amountRepaid = 0,
     required this.originationDate,
     required this.repayDate,
+    required this.duration,
     this.requestLink = '',
     this.notes = '',
     this.verificationItems = const [],
