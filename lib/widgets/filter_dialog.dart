@@ -334,7 +334,7 @@ class _FilterRowWidgetState extends State<FilterRowWidget> {
             items: [
               'ongoing',
               'overdue',
-              'completed',
+              'paid',
               'defaulted',
               'partial',
               'disputed',

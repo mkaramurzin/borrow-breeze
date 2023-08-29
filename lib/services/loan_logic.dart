@@ -32,7 +32,39 @@ class LoanLogic {
     return duration.inDays;
   }
 
+  // Calculate ROI on a daily scale
   static double calculateDailyRoi(double roi, int duration) {
     return roi / duration;
+  }
+
+  static double calculateAverage(String dataField, List<Loan> loanList) {
+    double total = 0.0;
+
+    if (loanList.isEmpty) {
+      return 0.0;
+    }
+
+    switch (dataField) {
+      case 'principal':
+        for (Loan loan in loanList) {
+          total += loan.principal;
+        }
+        return ((total / loanList.length) * 100).roundToDouble() / 100;
+
+      case 'interest':
+        for (Loan loan in loanList) {
+          total += (loan.repayAmount - loan.principal);
+        }
+        return ((total / loanList.length) * 100).roundToDouble() / 100;
+
+      case 'duration':
+        for (Loan loan in loanList) {
+          total += loan.duration;
+        }
+        return ((total / loanList.length) * 100).roundToDouble() / 100;
+
+      default:
+        return 0;
+    }
   }
 }

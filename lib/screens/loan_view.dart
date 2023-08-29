@@ -1,3 +1,4 @@
+import 'package:borrowbreeze/services/loan_logic.dart';
 import 'package:borrowbreeze/widgets/loan_item.dart';
 import 'package:borrowbreeze/services/database.dart';
 import 'package:borrowbreeze/services/auth.dart';
@@ -6,7 +7,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:borrowbreeze/models/filter.dart';
 import 'package:borrowbreeze/widgets/filter_dialog.dart';
-
 import '../widgets/loan_form.dart';
 
 class LoanView extends StatefulWidget {
@@ -18,48 +18,15 @@ class LoanView extends StatefulWidget {
 
 class _LoanViewState extends State<LoanView> {
   final AuthService _auth = AuthService();
-  List<Loan>? loanList;
+  List<Loan> loanList = [];
   LoanFilter currentFilter = LoanFilter();
-  Loan dummyLoan = Loan(
-      status: 'ongoing',
-      financialPlatform: 'PayPal',
-      borrowerUsername: 'Plungus',
-      borrowerName: 'Fahad',
-      principal: 200,
-      repayAmount: 240,
-      roi: 20,
-      originationDate: Timestamp.now(),
-      verificationItems: [
-        {
-          "label": "ID",
-          "url":
-              "https://matrix.redditspace.com/_matrix/media/r0/download/reddit.com/gf7c4a54acua1"
-        },
-        {
-          "label": "Photo",
-          "url":
-              "https://matrix.redditspace.com/_matrix/media/r0/download/reddit.com/akyk5o37dcua1"
-        }
-      ],
-      repayDate: Timestamp.now(),
-      duration: 10);
 
-  @override
-  void initState() {
-    super.initState();
-    fetchLoanList();
-  }
-
-  Future<void> fetchLoanList() async {
+  Future<List<Loan>> fetchLoanList() async {
     if (_auth.user != null) {
-      final fetchedLoanList =
-          await Database(uid: _auth.user!.uid).getLoans(filter: currentFilter);
-      if (mounted) {
-        setState(() {
-          loanList = fetchedLoanList;
-        });
-      }
+      return await Database(uid: _auth.user!.uid)
+          .getLoans(filter: currentFilter);
     }
+    return [];
   }
 
   Future<void> openFilterDialog() async {
@@ -71,7 +38,6 @@ class _LoanViewState extends State<LoanView> {
     if (result != null) {
       setState(() {
         currentFilter = result;
-        fetchLoanList();
       });
     }
   }
@@ -79,14 +45,10 @@ class _LoanViewState extends State<LoanView> {
   void menuOption(int option) async {
     switch (option) {
       case 0:
-        // await Database(uid: _auth.user!.uid).addLoan(dummyLoan);
-        // fetchLoanList();
-
         showDialog(
           context: context,
           builder: (context) => LoanFormDialog(
             onFormSubmit: () {
-              fetchLoanList();
               setState(() {});
             },
           ),
@@ -108,58 +70,70 @@ class _LoanViewState extends State<LoanView> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double contentWidth = screenWidth > 600 ? 600 : screenWidth;
+
     return Scaffold(
-        appBar: AppBar(
-          title: Text('Borrow Breeze'),
-          actions: [
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 20.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  menuOption(0);
-                },
-                child: Text('Create Loan'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white, // Background color
-                  foregroundColor: Colors.blue, // Text color
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30.0),
-                  ),
+      appBar: AppBar(
+        title: Text('Borrow Breeze'),
+        actions: [
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 20.0),
+            child: ElevatedButton(
+              onPressed: () {
+                menuOption(0);
+              },
+              child: Text('Create Loan'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white, // Background color
+                foregroundColor: Colors.blue, // Text color
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30.0),
                 ),
               ),
             ),
-            PopupMenuButton<int>(
-                onSelected: (item) {
-                  menuOption(item);
-                  setState(() {});
-                },
-                icon: Icon(Icons.settings),
-                position: PopupMenuPosition.under,
-                itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: 0,
-                        child: Text('Create Loan'),
-                      ),
-                      PopupMenuItem(
-                        value: 1,
-                        child: Text('Apply Filter'),
-                      ),
-                      PopupMenuDivider(),
-                      PopupMenuItem(
-                        value: 2,
-                        child: Text("Sign Out"),
-                      ),
-                    ]),
-          ],
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          ),
+          PopupMenuButton<int>(
+              onSelected: (item) {
+                menuOption(item);
+                setState(() {});
+              },
+              icon: Icon(Icons.settings),
+              position: PopupMenuPosition.under,
+              itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 0,
+                      child: Text('Create Loan'),
+                    ),
+                    PopupMenuItem(
+                      value: 1,
+                      child: Text('Apply Filter'),
+                    ),
+                    PopupMenuDivider(),
+                    PopupMenuItem(
+                      value: 2,
+                      child: Text("Sign Out"),
+                    ),
+                  ]),
+        ],
+      ),
+      body: FutureBuilder<List<Loan>>(
+        future: fetchLoanList(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error fetching loans.'));
+          }
+
+          loanList = snapshot.data ?? [];
+
+          return Column(
             children: [
-              loanList == null
-                  ? CircularProgressIndicator() // Loading indicator while fetching data
-                  : loanList!.isEmpty
+              Expanded(
+                child: Center(
+                  child: loanList.isEmpty
                       ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text('No loans found',
                                 style: TextStyle(fontSize: 22)),
@@ -213,23 +187,65 @@ class _LoanViewState extends State<LoanView> {
                             )
                           ],
                         )
-                      : Expanded(
-                          child: ListView(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: (screenWidth - contentWidth) /
-                                  2, // Center the content
-                            ),
-                            children: loanList!
-                                .map((loan) => AnimatedContainer(
-                                      duration: Duration(milliseconds: 500),
-                                      width: contentWidth,
-                                      child: LoanItem(loan: loan),
-                                    ))
-                                .toList(),
+                      : ListView(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: (screenWidth - contentWidth) /
+                                2, // Center the content
                           ),
+                          children: loanList!
+                              .map((loan) => AnimatedContainer(
+                                    duration: Duration(milliseconds: 500),
+                                    width: contentWidth,
+                                    child: LoanItem(loan: loan),
+                                  ))
+                              .toList(),
                         ),
+                ),
+              ),
+              Container(
+                height: MediaQuery.of(context).size.height * 0.05,
+                color: Colors.blue,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Total Items'),
+                        Text(loanList.length.toString()),
+                      ],
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Average Principal'),
+                        Text(
+                            '\$${LoanLogic.calculateAverage('principal', loanList)}')
+                      ],
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Average Interest'),
+                        Text(
+                            '\$${LoanLogic.calculateAverage('interest', loanList)}')
+                      ],
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Average Duration'),
+                        Text(
+                            '${LoanLogic.calculateAverage('duration', loanList)} Days')
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ],
-          ),
-        ));
+          );
+        },
+      ),
+    );
   }
 }
