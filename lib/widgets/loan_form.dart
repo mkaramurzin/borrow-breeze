@@ -22,11 +22,13 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   List accountNames = [];
   bool showPartialPaymentField = false;
+  TextEditingController loanAmountController = TextEditingController();
+  bool showCalcFee = false;
 
   String status = 'ongoing';
-  String? lenderAccount;
+  String lenderAccount = 'independent';
   String borrowerUsername = '';
-  String? financialPlatform;
+  String financialPlatform = 'PayPal';
   String borrowerName = '';
   double? loanAmount;
   double? repayAmount;
@@ -68,6 +70,9 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                 'url': item['url'] as String,
               })
           .toList();
+    }
+    if (widget.loan != null) {
+      loanAmountController.text = loanAmount.toString();
     }
   }
 
@@ -300,10 +305,10 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
             child: Column(
               children: [
                 widget.loan != null
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: _buildButtonsBasedOnStatus())
-                : MetricsRow(roi: roi, duration: duration),
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: _buildButtonsBasedOnStatus())
+                    : MetricsRow(roi: roi, duration: duration),
                 SizedBox(
                   height: 20,
                 ),
@@ -413,8 +418,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                   children: [
                     Expanded(
                       child: TextFormField(
-                        initialValue:
-                            widget.loan != null ? loanAmount.toString() : '',
+                        controller: loanAmountController,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           labelText: 'Loan Amount',
@@ -433,6 +437,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                         onChanged: (value) {
                           loanAmount = double.tryParse(value);
                           updateMetrics();
+                          showCalcFee = true;
                         },
                       ),
                     ),
@@ -466,6 +471,27 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                     ),
                   ],
                 ),
+                SizedBox(
+                  height: 20,
+                ),
+                showCalcFee
+                    ? Row(
+                        children: [
+                          Text('Calculate Fee'),
+                          IconButton(
+                            onPressed: () {
+                              loanAmount =
+                                  LoanLogic.calculatePaymentProtectionFee(
+                                      financialPlatform, loanAmount);
+                              loanAmountController.text = loanAmount.toString();
+                              updateMetrics();
+                              showCalcFee = false;
+                            },
+                            icon: Icon(Icons.autorenew),
+                          )
+                        ],
+                      )
+                    : SizedBox(),
                 SizedBox(
                   height: 20,
                 ),

@@ -59,15 +59,15 @@ Users (collection)
 8/23/2023: halfway through development
 what's missing:
     - all business logic calculations
-        a. ROI
-        b. DTE
-        c. Payment Protection fee calculation
+done        a. ROI
+done        b. Duration
+done        c. Payment Protection fee calculation
         d. default rate
         e. Working funds
         f. Historic, Projected, and Operational data
         g. Interest
-        h. Average loan principal
-        i. Average interest
+done        h. Average loan principal
+done        i. Average interest
         j. Yearly, quarterly, and monthly business report
 
     - all business logic sums
@@ -86,9 +86,6 @@ what's missing:
         a. ability to sort loans by data fields such as "repay date descending"
         b. preset filters such as "loans due today", "loans due this week", "overdue, ongoing, and extended"
         c. save user-made filters
-
-    - loan item
-        a. embed business logic such as "ROI", "Duration", "Interest"
 
     - High-level changelog to complement low-level changelog
     - Reminder system

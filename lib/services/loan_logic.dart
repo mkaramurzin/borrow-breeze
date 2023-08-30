@@ -37,6 +37,7 @@ class LoanLogic {
     return roi / duration;
   }
 
+  // Calculate various averages
   static double calculateAverage(String dataField, List<Loan> loanList) {
     double total = 0.0;
 
@@ -66,5 +67,17 @@ class LoanLogic {
       default:
         return 0;
     }
+  }
+
+  // Calculate the payment protection fee for PayPal or Venmo
+  static double calculatePaymentProtectionFee(String platform, amount) {
+    if (platform == 'PayPal') {
+      amount = (amount) / (1 - 0.0299);
+      return ((amount) * 100).roundToDouble() / 100;
+    } else if (platform == 'Venmo') {
+      amount = (amount) / (1 - 0.019) + 0.1;
+      return ((amount) * 100).roundToDouble() / 100;
+    }
+    return 0;
   }
 }
