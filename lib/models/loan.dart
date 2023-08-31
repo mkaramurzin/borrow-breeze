@@ -11,6 +11,7 @@ class Loan {
   double principal;
   double repayAmount;
   double amountRepaid;
+  double interest;
   double roi;
   Timestamp originationDate;
   Timestamp repayDate;
@@ -31,6 +32,7 @@ class Loan {
     required this.borrowerName,
     required this.principal,
     required this.repayAmount,
+    required this.interest,
     required this.roi,
     this.amountRepaid = 0,
     required this.originationDate,

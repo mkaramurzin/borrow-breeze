@@ -111,7 +111,10 @@ class _LoanItemState extends State<LoanItem> {
                           'Repay Date: ${DateFormat('MM-dd-yyyy').format(widget.loan.repayDate.toDate())}'),
                     ],
                   ),
-                  MetricsRow(roi: widget.loan.roi, duration: widget.loan.duration)
+                  SizedBox(
+                    height: 10,
+                  ),
+                  MetricsRow(roi: widget.loan.roi, interest: widget.loan.interest, duration: widget.loan.duration)
                 ],
               ),
               onTap: () {

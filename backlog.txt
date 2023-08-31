@@ -40,7 +40,15 @@ Users (collection)
         available liquid (field)
         total money lent (field)
         total money repaid (field)
+        total interest (field)
+        total money defaulted (field)
         funds out in loan (field)
+        pending refunds (field)
+        projected liquid (field)
+        operational profit (field)
+        operational roi (field)
+        ... to be continued
+
         Accounts (collection)
             name (field)
             active sum (field)
@@ -85,7 +93,7 @@ done        c. Payment Protection fee calculation
         d. default rate
         e. Working funds
         f. Historic, Projected, and Operational data
-        g. Interest
+done        g. Interest
 done        h. Average loan principal
 done        i. Average interest
         j. Yearly, quarterly, and monthly business report
@@ -95,12 +103,13 @@ done        i. Average interest
         b. Total Expenses
         c. Total $ Defaulted
         d. Pending chargebacks
-        e. Total ongoing loans
-        f. Total Completed loans
-        g. Total $ lent
-        h. Total $ repaid
-        i. Total interest
-        j. Gross
+        e. total loans
+        f. Total ongoing loans
+        g. Total Completed loans
+done        h. Total $ lent
+done        i. Total $ repaid
+done        j. Total interest
+        k. Gross
 
     - filter feature
         a. ability to sort loans by data fields such as "repay date descending"

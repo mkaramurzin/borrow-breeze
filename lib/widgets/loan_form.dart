@@ -26,12 +26,13 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
   bool showCalcFee = false;
 
   String status = 'ongoing';
-  String lenderAccount = 'independent';
+  String lenderAccount = 'Independent';
   String borrowerUsername = '';
   String financialPlatform = 'PayPal';
   String borrowerName = '';
   double? loanAmount;
   double? repayAmount;
+  double? interest;
   double amountRepaid = 0;
   double? roi;
   DateTime originationDate = DateTime.now();
@@ -57,6 +58,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
       borrowerName = widget.loan!.borrowerName;
       loanAmount = widget.loan!.principal;
       repayAmount = widget.loan!.repayAmount;
+      interest = widget.loan!.interest;
       amountRepaid = widget.loan!.amountRepaid;
       roi = widget.loan!.roi;
       originationDate = widget.loan!.originationDate.toDate();
@@ -78,6 +80,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
 
   void updateMetrics() {
     if (loanAmount != null && repayAmount != null) {
+      interest = repayAmount! - loanAmount!;
       roi = LoanLogic.calculateRoiSingle(loanAmount!, repayAmount!);
     }
     if (originationDate != null && repayDate != null) {
@@ -105,9 +108,11 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
     ElevatedButton paidBtn = ElevatedButton(
       style: ElevatedButton.styleFrom(
           backgroundColor: Color.fromARGB(255, 130, 206, 133)),
-      onPressed: () {
+      onPressed: () async {
         status = 'paid';
         amountRepaid = widget.loan!.repayAmount;
+        Database(uid: _auth.user!.uid).updateTotalMoneyRepaid(amountRepaid);
+        Database(uid: _auth.user!.uid).updateTotalInterest(interest!);
         onSubmit();
       },
       child: Text('Paid'),
@@ -180,10 +185,391 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
       case 'defaulted':
         return [paidBtn, disputeBtn];
       case 'disputed':
-        return [paidBtn, refundBtn];
+        return [refundBtn];
+      case 'paid':
+        return [disputeBtn];
       default:
         return [];
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+
+    double dialogWidth;
+    if (screenWidth < 600) {
+      // Mobile
+      dialogWidth = screenWidth * 0.9;
+    } else {
+      // Desktop
+      dialogWidth = screenWidth * 0.5;
+    }
+    return AlertDialog(
+      title: widget.loan == null
+          ? Center(child: Text('Add Loan'))
+          : Center(child: Text('Edit Loan')),
+      content: Container(
+        width: dialogWidth,
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  widget.loan != null
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: _buildButtonsBasedOnStatus())
+                      : MetricsRow(roi: roi, interest: interest, duration: duration),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField(
+                          value: lenderAccount,
+                          onChanged: (newValue) {
+                            if (newValue != null) {
+                              setState(() {
+                                lenderAccount = newValue as String;
+                              });
+                            }
+                          },
+                          items: accountNames.map((account) {
+                            return DropdownMenuItem(
+                              child: Text(account),
+                              value: account,
+                            );
+                          }).toList(),
+                          validator: (value) {
+                            if (value == null) {
+                              return 'Please select a lender account';
+                            }
+                            return null;
+                          },
+                          decoration: InputDecoration(
+                            labelText: 'Lender Account',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 50,
+                      ),
+                      Expanded(
+                        child: DropdownButtonFormField(
+                          value: financialPlatform,
+                          onChanged: (newValue) {
+                            if (newValue != null) {
+                              setState(() {
+                                financialPlatform = newValue;
+                              });
+                            }
+                          },
+                          items: ['PayPal', 'Venmo', 'Zelle'].map((platform) {
+                            return DropdownMenuItem(
+                              child: Text(platform),
+                              value: platform,
+                            );
+                          }).toList(),
+                          validator: (value) {
+                            if (value == null) {
+                              return 'Please select a financial platform';
+                            }
+                            return null;
+                          },
+                          decoration: InputDecoration(
+                            labelText: 'Financial Platform',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          initialValue: borrowerUsername,
+                          onChanged: (value) => borrowerUsername = value,
+                          decoration: InputDecoration(
+                            labelText: 'Borrower Username',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 50,
+                      ),
+                      Expanded(
+                        child: TextFormField(
+                          initialValue: borrowerName,
+                          onChanged: (value) => borrowerName = value,
+                          decoration: InputDecoration(
+                            labelText: 'Borrower Name',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a name';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: loanAmountController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: 'Loan Amount',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a loan amount';
+                            }
+                            if (double.tryParse(value) == null ||
+                                double.parse(value) < 1) {
+                              return 'Please enter a valid number';
+                            }
+                            return null;
+                          },
+                          onChanged: (value) {
+                            loanAmount = double.tryParse(value);
+                            updateMetrics();
+                            showCalcFee = true;
+                          },
+                        ),
+                      ),
+                      SizedBox(
+                        width: 50,
+                      ),
+                      Expanded(
+                        child: TextFormField(
+                          initialValue:
+                              widget.loan != null ? repayAmount.toString() : '',
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: 'Repay Amount',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a repay amount';
+                            }
+                            if (double.tryParse(value) == null ||
+                                double.parse(value) < 1) {
+                              return 'Please enter a valid number';
+                            }
+                            return null;
+                          },
+                          onChanged: (value) {
+                            repayAmount = double.tryParse(value);
+                            updateMetrics();
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  showCalcFee
+                      ? Row(
+                          children: [
+                            Text('Calculate Fee'),
+                            IconButton(
+                              onPressed: () {
+                                loanAmount =
+                                    LoanLogic.calculatePaymentProtectionFee(
+                                        financialPlatform, loanAmount);
+                                loanAmountController.text =
+                                    loanAmount.toString();
+                                updateMetrics();
+                                showCalcFee = false;
+                              },
+                              icon: Icon(Icons.autorenew),
+                            )
+                          ],
+                        )
+                      : SizedBox(),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: TextEditingController()
+                            ..text = formatDate(originationDate),
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: 'Origination Date',
+                            border: OutlineInputBorder(),
+                          ),
+                          onTap: () async {
+                            DateTime? pickedDate = await showDatePicker(
+                              context: context,
+                              initialDate: originationDate,
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime.now().add(Duration(
+                                  days: 3650)), // 10 years into the future
+                            );
+                            if (pickedDate != null &&
+                                pickedDate != originationDate) {
+                              originationDate = pickedDate;
+                              updateMetrics();
+                            }
+                          },
+                        ),
+                      ),
+                      SizedBox(
+                        width: 50,
+                      ),
+                      Expanded(
+                        child: TextFormField(
+                          controller: TextEditingController()
+                            ..text = formatDate(repayDate),
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: 'Repay Date',
+                            border: OutlineInputBorder(),
+                          ),
+                          onTap: () async {
+                            DateTime? pickedDate = await showDatePicker(
+                              context: context,
+                              initialDate: repayDate,
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime.now().add(Duration(
+                                  days: 3650)), // 10 years into the future
+                            );
+                            if (pickedDate != null && pickedDate != repayDate) {
+                              repayDate = pickedDate;
+                              updateMetrics();
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  TextFormField(
+                    initialValue: loanRequestLink,
+                    onChanged: (value) => loanRequestLink = value,
+                    decoration: InputDecoration(
+                      labelText: 'Loan Request Link',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  TextFormField(
+                    initialValue: notes,
+                    onChanged: (value) {
+                      notes = value;
+                    },
+                    maxLines: 4,
+                    decoration: InputDecoration(
+                      labelText: 'Notes',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  ...verificationItems.asMap().entries.map((entry) {
+                    int idx = entry.key;
+                    Map<String, String> item = entry.value;
+                    return Container(
+                      margin: EdgeInsets.symmetric(vertical: 5),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              initialValue: item['label'],
+                              decoration: InputDecoration(
+                                labelText: 'Label',
+                                border: OutlineInputBorder(),
+                              ),
+                              onChanged: (value) {
+                                setState(() {
+                                  verificationItems[idx]['label'] = value;
+                                });
+                              },
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: TextFormField(
+                              initialValue: item['url'],
+                              decoration: InputDecoration(
+                                labelText: 'URL',
+                                border: OutlineInputBorder(),
+                              ),
+                              onChanged: (value) {
+                                setState(() {
+                                  verificationItems[idx]['url'] = value;
+                                });
+                              },
+                            ),
+                          ),
+                          Visibility(
+                            child: IconButton(
+                              icon: Icon(Icons.delete),
+                              onPressed: () {
+                                setState(() {
+                                  verificationItems.removeAt(idx);
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  Container(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          verificationItems.add({'label': '', 'url': ''});
+                        });
+                      },
+                      child: Text("Add Verification Item"),
+                    ),
+                  ),
+                  ElevatedButton(
+                    child: Text('Submit'),
+                    onPressed: () async {
+                      if (_formKey.currentState!.validate()) {
+                        onSubmit();
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> onSubmit() async {
@@ -269,6 +655,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
       widget.loan!.changeLog += changelogEntry;
       await Database(uid: _auth.user!.uid).updateLoan(widget.loan!);
     } else {
+      await Database(uid: _auth.user!.uid).updateTotalMoneyLent(loanAmount!);
       await Database(uid: _auth.user!.uid).addLoan(Loan(
           status: 'ongoing',
           lenderAccount: lenderAccount!,
@@ -277,6 +664,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
           borrowerName: borrowerName,
           principal: loanAmount!,
           repayAmount: repayAmount!,
+          interest: interest!,
           roi: roi!,
           originationDate: Timestamp.fromDate(originationDate),
           repayDate: Timestamp.fromDate(repayDate),
@@ -289,370 +677,5 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
     }
     widget.onFormSubmit();
     Navigator.pop(context);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: widget.loan == null
-          ? Center(child: Text('Add Loan'))
-          : Center(child: Text('Edit Loan')),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                widget.loan != null
-                    ? Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: _buildButtonsBasedOnStatus())
-                    : MetricsRow(roi: roi, duration: duration),
-                SizedBox(
-                  height: 20,
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField(
-                        value: lenderAccount,
-                        onChanged: (newValue) {
-                          if (newValue != null) {
-                            setState(() {
-                              lenderAccount = newValue as String;
-                            });
-                          }
-                        },
-                        items: accountNames.map((account) {
-                          return DropdownMenuItem(
-                            child: Text(account),
-                            value: account,
-                          );
-                        }).toList(),
-                        validator: (value) {
-                          if (value == null) {
-                            return 'Please select a lender account';
-                          }
-                          return null;
-                        },
-                        decoration: InputDecoration(
-                          labelText: 'Lender Account',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 50,
-                    ),
-                    Expanded(
-                      child: DropdownButtonFormField(
-                        value: financialPlatform,
-                        onChanged: (newValue) {
-                          if (newValue != null) {
-                            setState(() {
-                              financialPlatform = newValue;
-                            });
-                          }
-                        },
-                        items: ['PayPal', 'Venmo', 'Zelle'].map((platform) {
-                          return DropdownMenuItem(
-                            child: Text(platform),
-                            value: platform,
-                          );
-                        }).toList(),
-                        validator: (value) {
-                          if (value == null) {
-                            return 'Please select a financial platform';
-                          }
-                          return null;
-                        },
-                        decoration: InputDecoration(
-                          labelText: 'Financial Platform',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        initialValue: borrowerUsername,
-                        onChanged: (value) => borrowerUsername = value,
-                        decoration: InputDecoration(
-                          labelText: 'Borrower Username',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 50,
-                    ),
-                    Expanded(
-                      child: TextFormField(
-                        initialValue: borrowerName,
-                        onChanged: (value) => borrowerName = value,
-                        decoration: InputDecoration(
-                          labelText: 'Borrower Name',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a name';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: loanAmountController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: 'Loan Amount',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a loan amount';
-                          }
-                          if (double.tryParse(value) == null ||
-                              double.parse(value) < 1) {
-                            return 'Please enter a valid number';
-                          }
-                          return null;
-                        },
-                        onChanged: (value) {
-                          loanAmount = double.tryParse(value);
-                          updateMetrics();
-                          showCalcFee = true;
-                        },
-                      ),
-                    ),
-                    SizedBox(
-                      width: 50,
-                    ),
-                    Expanded(
-                      child: TextFormField(
-                        initialValue:
-                            widget.loan != null ? repayAmount.toString() : '',
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: 'Repay Amount',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a repay amount';
-                          }
-                          if (double.tryParse(value) == null ||
-                              double.parse(value) < 1) {
-                            return 'Please enter a valid number';
-                          }
-                          return null;
-                        },
-                        onChanged: (value) {
-                          repayAmount = double.tryParse(value);
-                          updateMetrics();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                showCalcFee
-                    ? Row(
-                        children: [
-                          Text('Calculate Fee'),
-                          IconButton(
-                            onPressed: () {
-                              loanAmount =
-                                  LoanLogic.calculatePaymentProtectionFee(
-                                      financialPlatform, loanAmount);
-                              loanAmountController.text = loanAmount.toString();
-                              updateMetrics();
-                              showCalcFee = false;
-                            },
-                            icon: Icon(Icons.autorenew),
-                          )
-                        ],
-                      )
-                    : SizedBox(),
-                SizedBox(
-                  height: 20,
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: TextEditingController()
-                          ..text = formatDate(originationDate),
-                        readOnly: true,
-                        decoration: InputDecoration(
-                          labelText: 'Origination Date',
-                          border: OutlineInputBorder(),
-                        ),
-                        onTap: () async {
-                          DateTime? pickedDate = await showDatePicker(
-                            context: context,
-                            initialDate: originationDate,
-                            firstDate: DateTime(2000),
-                            lastDate: DateTime.now().add(Duration(
-                                days: 3650)), // 10 years into the future
-                          );
-                          if (pickedDate != null &&
-                              pickedDate != originationDate) {
-                            originationDate = pickedDate;
-                            updateMetrics();
-                          }
-                        },
-                      ),
-                    ),
-                    SizedBox(
-                      width: 50,
-                    ),
-                    Expanded(
-                      child: TextFormField(
-                        controller: TextEditingController()
-                          ..text = formatDate(repayDate),
-                        readOnly: true,
-                        decoration: InputDecoration(
-                          labelText: 'Repay Date',
-                          border: OutlineInputBorder(),
-                        ),
-                        onTap: () async {
-                          DateTime? pickedDate = await showDatePicker(
-                            context: context,
-                            initialDate: repayDate,
-                            firstDate: DateTime(2000),
-                            lastDate: DateTime.now().add(Duration(
-                                days: 3650)), // 10 years into the future
-                          );
-                          if (pickedDate != null && pickedDate != repayDate) {
-                            repayDate = pickedDate;
-                            updateMetrics();
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                TextFormField(
-                  initialValue: loanRequestLink,
-                  onChanged: (value) => loanRequestLink = value,
-                  decoration: InputDecoration(
-                    labelText: 'Loan Request Link',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                TextFormField(
-                  initialValue: notes,
-                  onChanged: (value) {
-                    notes = value;
-                  },
-                  maxLines: 4,
-                  decoration: InputDecoration(
-                    labelText: 'Notes',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                ...verificationItems.asMap().entries.map((entry) {
-                  int idx = entry.key;
-                  Map<String, String> item = entry.value;
-                  return Container(
-                    margin: EdgeInsets.symmetric(vertical: 5),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            initialValue: item['label'],
-                            decoration: InputDecoration(
-                              labelText: 'Label',
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                verificationItems[idx]['label'] = value;
-                              });
-                            },
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: TextFormField(
-                            initialValue: item['url'],
-                            decoration: InputDecoration(
-                              labelText: 'URL',
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                verificationItems[idx]['url'] = value;
-                              });
-                            },
-                          ),
-                        ),
-                        Visibility(
-                          child: IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () {
-                              setState(() {
-                                verificationItems.removeAt(idx);
-                              });
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-                Container(
-                  padding: EdgeInsets.symmetric(vertical: 20),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        verificationItems.add({'label': '', 'url': ''});
-                      });
-                    },
-                    child: Text("Add Verification Item"),
-                  ),
-                ),
-                ElevatedButton(
-                  child: Text('Submit'),
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      onSubmit();
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

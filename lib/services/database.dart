@@ -9,6 +9,13 @@ class Database {
   final CollectionReference userCollection =
       FirebaseFirestore.instance.collection('Users');
 
+  Future<void> setUserData() async {
+    await userCollection
+        .doc(uid)
+        .collection('Accounts')
+        .add({'name': 'Independent'});
+  }
+
   Future<String> addLoan(Loan loan) async {
     final DocumentReference docRef =
         await userCollection.doc(uid).collection('Loans').add({
@@ -19,6 +26,7 @@ class Database {
       'borrower name': loan.borrowerName,
       'amount': loan.principal,
       'repay amount': loan.repayAmount,
+      'interest': loan.interest,
       'roi': loan.roi,
       'amount repaid': loan.amountRepaid,
       'origination date': loan.originationDate,
@@ -93,14 +101,17 @@ class Database {
           borrowerName: doc['borrower name'] as String,
           principal: doc['amount'] as double,
           repayAmount: doc['repay amount'] as double,
+          interest: doc['interest'] as double,
           amountRepaid: doc['amount repaid'] as double,
-          roi: doc['roi'] as double, 
+          roi: doc['roi'] as double,
           originationDate: doc['origination date'] as Timestamp,
           repayDate: doc['repay date'] as Timestamp,
           duration: doc['duration'] as int,
           requestLink: doc['request link'] as String,
           notes: doc['notes'] as String,
-          verificationItems: (doc['verification items'] as List).map((item) => item as Map<String, dynamic>).toList(),
+          verificationItems: (doc['verification items'] as List)
+              .map((item) => item as Map<String, dynamic>)
+              .toList(),
           reminders: doc['reminders'] as int,
           changeLog: doc['changelog'] as String);
     }).toList();
@@ -127,8 +138,10 @@ class Database {
   }
 
   Future<List<String>> fetchAccountNames() async {
+    // QuerySnapshot accountSnapshot =
+    //     await FirebaseFirestore.instance.collection('Accounts').get();
     QuerySnapshot accountSnapshot =
-        await FirebaseFirestore.instance.collection('Accounts').get();
+        await userCollection.doc(uid).collection('Accounts').get();
 
     return accountSnapshot.docs
         .map((accountDoc) => accountDoc['name'] as String)
@@ -196,5 +209,35 @@ class Database {
         repayDate: doc['repay date'] as Timestamp?,
       );
     }).toList();
+  }
+
+  // Business logic related section below
+
+  Future<void> updateTotalMoneyLent(double amount) async {
+    DocumentSnapshot userDoc = await userCollection.doc(uid).get();
+
+    if (userDoc.exists) {
+      // If the document exists, increment (or create) the value
+      await userCollection
+          .doc(uid)
+          .update({'total money lent': FieldValue.increment(amount)});
+    } else {
+      // If the document doesn't exist, set the value
+      await userCollection
+          .doc(uid)
+          .set({'total money lent': amount}, SetOptions(merge: true));
+    }
+  }
+
+  Future<void> updateTotalMoneyRepaid(double amount) async {
+    await userCollection
+          .doc(uid)
+          .update({'total money repaid': FieldValue.increment(amount)});
+  }
+
+  Future<void> updateTotalInterest(double amount) async {
+    await userCollection
+          .doc(uid)
+          .update({'total interest': FieldValue.increment(amount)});
   }
 }
