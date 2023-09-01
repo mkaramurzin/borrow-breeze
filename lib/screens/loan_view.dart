@@ -73,7 +73,18 @@ class _LoanViewState extends State<LoanView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Borrow Breeze'),
+        title: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () {
+              currentFilter = LoanFilter();
+              setState(() {
+                
+              });
+            },
+            child: Text('Borrow Breeze'),
+          ),
+        ),
         actions: [
           Container(
             margin: EdgeInsets.symmetric(horizontal: 20.0),

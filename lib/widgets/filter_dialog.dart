@@ -418,8 +418,8 @@ class _FilterRowWidgetState extends State<FilterRowWidget> {
                     border: OutlineInputBorder(),
                   ),
                   validator: (value) {
-                    if (value == null || value == '') {
-                      return 'Please enter a username';
+                    if (value == null || value == '' || selectedUsername == null) {
+                      return "Username doesn't exist";
                     }
                     return null;
                   },
@@ -481,7 +481,7 @@ class _FilterRowWidgetState extends State<FilterRowWidget> {
                   ),
                   validator: (value) {
                     if (value == null || value == '') {
-                      return 'Please enter a name';
+                      return "Name doesn't exist";
                     }
                     return null;
                   },
