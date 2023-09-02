@@ -111,8 +111,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
       onPressed: () async {
         status = 'paid';
         amountRepaid = widget.loan!.repayAmount;
-        Database(uid: _auth.user!.uid).updateTotalMoneyRepaid(amountRepaid);
-        Database(uid: _auth.user!.uid).updateTotalInterest(interest!);
+        Database(uid: _auth.user!.uid).handlePaidLoan(widget.loan!);
         onSubmit();
       },
       child: Text('Paid'),
@@ -131,6 +130,8 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
           if (status != 'extended') {
             status = 'partial';
           }
+          Database(uid: _auth.user!.uid)
+              .handlePartialPayment(widget.loan!, enteredAmount);
           amountRepaid += enteredAmount;
           onSubmit();
         }
@@ -222,7 +223,8 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                       ? Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: _buildButtonsBasedOnStatus())
-                      : MetricsRow(roi: roi, interest: interest, duration: duration),
+                      : MetricsRow(
+                          roi: roi, interest: interest, duration: duration),
                   SizedBox(
                     height: 20,
                   ),
@@ -655,8 +657,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
       widget.loan!.changeLog += changelogEntry;
       await Database(uid: _auth.user!.uid).updateLoan(widget.loan!);
     } else {
-      await Database(uid: _auth.user!.uid).updateTotalMoneyLent(loanAmount!);
-      await Database(uid: _auth.user!.uid).addLoan(Loan(
+      Loan newLoan = Loan(
           status: 'ongoing',
           lenderAccount: lenderAccount!,
           financialPlatform: financialPlatform!,
@@ -673,7 +674,8 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
           notes: notes,
           verificationItems: verificationItems,
           changeLog:
-              '${DateTime.now()}\nLoan Item Created\nLoan Amount: $loanAmount\nRepay Amount: $repayAmount\nRepay Date: ${formatDate(repayDate)}\n\n'));
+              '${DateTime.now()}\nLoan Item Created\nLoan Amount: $loanAmount\nRepay Amount: $repayAmount\nRepay Date: ${formatDate(repayDate)}\n\n');
+      await Database(uid: _auth.user!.uid).addLoan(newLoan);
     }
     widget.onFormSubmit();
     Navigator.pop(context);

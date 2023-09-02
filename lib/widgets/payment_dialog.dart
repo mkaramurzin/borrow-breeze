@@ -47,7 +47,6 @@ class _PaymentDialogState extends State<PaymentDialog> {
         ElevatedButton(
           child: Text("Submit"),
           onPressed: () {
-            print(_controller.text);
             double? enteredAmount = double.tryParse(_controller.text);
             if (enteredAmount != null && enteredAmount > 0) {
               amountRepaid = enteredAmount;

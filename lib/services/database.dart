@@ -38,6 +38,7 @@ class Database {
       'reminders': loan.reminders,
       'changelog': loan.changeLog
     });
+    _updateTotalMoneyLent(loan.principal);
     return docRef.id;
   }
 
@@ -213,7 +214,32 @@ class Database {
 
   // Business logic related section below
 
-  Future<void> updateTotalMoneyLent(double amount) async {
+  Future<void> handlePaidLoan(Loan loan) async {
+    _updateTotalMoneyRepaid(loan.repayAmount - loan.amountRepaid);
+    if (loan.amountRepaid > loan.principal) {
+      _updateTotalInterest(loan.interest - (loan.amountRepaid - loan.principal));
+      _updateTotalProfit(loan.interest - (loan.amountRepaid - loan.principal));
+    } else {
+      _updateTotalInterest(loan.interest);
+      _updateTotalProfit(loan.interest);
+    }
+  }
+
+  Future<void> handlePartialPayment(Loan loan, double amount) async {
+    _updateTotalMoneyRepaid(amount);
+
+    if (loan.amountRepaid >= loan.principal) {
+      _updateTotalInterest(amount);
+      _updateTotalProfit(amount);
+    } else if (amount + loan.amountRepaid > loan.principal) {
+      _updateTotalInterest((amount + loan.amountRepaid) - loan.principal);
+      _updateTotalProfit((amount + loan.amountRepaid) - loan.principal);
+    }
+  }
+
+  Future<void> _handleDefaultedLoan(Loan loan) async {}
+
+  Future<void> _updateTotalMoneyLent(double amount) async {
     DocumentSnapshot userDoc = await userCollection.doc(uid).get();
 
     if (userDoc.exists) {
@@ -229,15 +255,21 @@ class Database {
     }
   }
 
-  Future<void> updateTotalMoneyRepaid(double amount) async {
+  Future<void> _updateTotalMoneyRepaid(double amount) async {
     await userCollection
-          .doc(uid)
-          .update({'total money repaid': FieldValue.increment(amount)});
+        .doc(uid)
+        .update({'total money repaid': FieldValue.increment(amount)});
   }
 
-  Future<void> updateTotalInterest(double amount) async {
+  Future<void> _updateTotalInterest(double amount) async {
     await userCollection
-          .doc(uid)
-          .update({'total interest': FieldValue.increment(amount)});
+        .doc(uid)
+        .update({'total interest': FieldValue.increment(amount)});
+  }
+
+  Future<void> _updateTotalProfit(double amount) async {
+    await userCollection
+        .doc(uid)
+        .update({'profit': FieldValue.increment(amount)});
   }
 }
