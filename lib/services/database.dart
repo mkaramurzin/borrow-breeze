@@ -216,8 +216,19 @@ class Database {
 
   Future<void> handlePaidLoan(Loan loan) async {
     _updateTotalMoneyRepaid(loan.repayAmount - loan.amountRepaid);
+
+    // undo defaulted loan changes
+    if (loan.status == 'defaulted') {
+      print(loan.amountRepaid);
+      _updateTotalProfit(loan.principal);
+      _updateTotalDefaulted(-loan.principal);
+      _updateTotalInterest(-loan.amountRepaid);
+      _updateTotalProfit(-loan.amountRepaid);
+    }
+
     if (loan.amountRepaid > loan.principal) {
-      _updateTotalInterest(loan.interest - (loan.amountRepaid - loan.principal));
+      _updateTotalInterest(
+          loan.interest - (loan.amountRepaid - loan.principal));
       _updateTotalProfit(loan.interest - (loan.amountRepaid - loan.principal));
     } else {
       _updateTotalInterest(loan.interest);
@@ -237,7 +248,12 @@ class Database {
     }
   }
 
-  Future<void> _handleDefaultedLoan(Loan loan) async {}
+  Future<void> handleDefaultedLoan(Loan loan) async {
+    _updateTotalProfit(-loan.principal);
+    _updateTotalDefaulted(loan.principal);
+    _updateTotalInterest(loan.amountRepaid);
+    _updateTotalProfit(loan.amountRepaid);
+  }
 
   Future<void> _updateTotalMoneyLent(double amount) async {
     DocumentSnapshot userDoc = await userCollection.doc(uid).get();
@@ -270,6 +286,12 @@ class Database {
   Future<void> _updateTotalProfit(double amount) async {
     await userCollection
         .doc(uid)
-        .update({'profit': FieldValue.increment(amount)});
+        .update({'total profit': FieldValue.increment(amount)});
+  }
+
+  Future<void> _updateTotalDefaulted(double amount) async {
+    await userCollection
+        .doc(uid)
+        .update({'total defaulted money': FieldValue.increment(amount)});
   }
 }

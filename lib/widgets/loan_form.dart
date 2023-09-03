@@ -142,8 +142,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
       style: ElevatedButton.styleFrom(
           backgroundColor: Color.fromARGB(255, 231, 15, 0)),
       onPressed: () {
-        // TODO deduct principal from 'profit' sum
-        // TODO add to 'total defaulted sum'
+        Database(uid: _auth.user!.uid).handleDefaultedLoan(widget.loan!);
         status = 'defaulted';
         onSubmit();
       },
