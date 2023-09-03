@@ -16,9 +16,13 @@ class Database {
         .add({'name': 'Independent'});
   }
 
-  Future<String> addLoan(Loan loan) async {
+  Future<void> addLoan(Loan loan) async {
+    // Get a new document reference without actually creating it.
     final DocumentReference docRef =
-        await userCollection.doc(uid).collection('Loans').add({
+        userCollection.doc(uid).collection('Loans').doc();
+
+    await docRef.set({
+      'docID': docRef.id,
       'status': loan.status,
       'lender account': loan.lenderAccount,
       'financial platform': loan.financialPlatform,
@@ -38,8 +42,15 @@ class Database {
       'reminders': loan.reminders,
       'changelog': loan.changeLog
     });
+
     _updateTotalMoneyLent(loan.principal);
-    return docRef.id;
+  }
+
+  Future<void> deleteLoan(Loan loan) async {
+    print('testing');
+    await userCollection.doc(uid).collection('Loans').doc(loan.docID).delete();
+
+    _updateTotalMoneyLent(-loan.principal);
   }
 
   Future<List<Loan>> getLoans({LoanFilter? filter}) async {
@@ -213,6 +224,32 @@ class Database {
   }
 
   // Business logic related section below
+
+  // TODO delete in production
+  Future<void> totalReset() async {
+    // Delete every loan
+    CollectionReference accountsCollection =
+        userCollection.doc(uid).collection('Loans');
+
+    QuerySnapshot accountSnapshot = await accountsCollection.get();
+
+    for (QueryDocumentSnapshot accountDoc in accountSnapshot.docs) {
+      await accountsCollection.doc(accountDoc.id).delete();
+    }
+    await userCollection
+        .doc(uid)
+        .update({'total money lent': FieldValue.delete()});
+    await userCollection
+        .doc(uid)
+        .update({'total money repaid': FieldValue.delete()});
+    await userCollection
+        .doc(uid)
+        .update({'total interest': FieldValue.delete()});
+    await userCollection.doc(uid).update({'total profit': FieldValue.delete()});
+    await userCollection
+        .doc(uid)
+        .update({'total defaulted money': FieldValue.delete()});
+  }
 
   Future<void> handlePaidLoan(Loan loan) async {
     _updateTotalMoneyRepaid(loan.repayAmount - loan.amountRepaid);

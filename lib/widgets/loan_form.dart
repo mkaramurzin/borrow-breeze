@@ -208,7 +208,27 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
     return AlertDialog(
       title: widget.loan == null
           ? Center(child: Text('Add Loan'))
-          : Center(child: Text('Edit Loan')),
+          : Center(
+              child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Edit Loan'),
+                widget.loan!.status == 'ongoing'
+                    ? IconButton(
+                        onPressed: () async {
+                          await Database(uid: _auth.user!.uid)
+                              .deleteLoan(widget.loan!);
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text("Delete in progress")),
+                            );
+                        },
+                        icon: Icon(Icons.delete),
+                      )
+                    : SizedBox()
+              ],
+            )),
       content: Container(
         width: dialogWidth,
         child: SingleChildScrollView(
@@ -676,7 +696,6 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
               '${DateTime.now()}\nLoan Item Created\nLoan Amount: $loanAmount\nRepay Amount: $repayAmount\nRepay Date: ${formatDate(repayDate)}\n\n');
       await Database(uid: _auth.user!.uid).addLoan(newLoan);
     }
-    widget.onFormSubmit();
     Navigator.pop(context);
   }
 }

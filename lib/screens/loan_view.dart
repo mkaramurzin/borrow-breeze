@@ -45,14 +45,13 @@ class _LoanViewState extends State<LoanView> {
   void menuOption(int option) async {
     switch (option) {
       case 0:
-        showDialog(
+        await showDialog(
           context: context,
           builder: (context) => LoanFormDialog(
-            onFormSubmit: () {
-              setState(() {});
-            },
+            onFormSubmit: () {},
           ),
         );
+        setState(() {});
         break;
 
       case 1:
@@ -78,9 +77,7 @@ class _LoanViewState extends State<LoanView> {
           child: GestureDetector(
             onTap: () {
               currentFilter = LoanFilter();
-              setState(() {
-                
-              });
+              setState(() {});
             },
             child: Text('Borrow Breeze'),
           ),
@@ -101,6 +98,16 @@ class _LoanViewState extends State<LoanView> {
                 ),
               ),
             ),
+          ),
+          // TODO delete in production
+          ElevatedButton(
+            onPressed: () async {
+              await Database(uid: _auth.user!.uid).totalReset();
+              setState(() {
+                
+              });
+            },
+            child: Icon(Icons.autorenew),
           ),
           PopupMenuButton<int>(
               onSelected: (item) {
