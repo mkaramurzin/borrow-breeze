@@ -101,7 +101,7 @@ done        i. Average interest
     - all business logic sums
         a. Total Historic, Projected, and Operational Profit
         b. Total Expenses
-        c. Total $ Defaulted
+done        c. Total $ Defaulted
         d. Pending chargebacks
         e. total loans
         f. Total ongoing loans

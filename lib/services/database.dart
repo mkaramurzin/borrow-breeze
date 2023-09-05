@@ -47,7 +47,6 @@ class Database {
   }
 
   Future<void> deleteLoan(Loan loan) async {
-    print('testing');
     await userCollection.doc(uid).collection('Loans').doc(loan.docID).delete();
 
     _updateTotalMoneyLent(-loan.principal);
@@ -249,6 +248,12 @@ class Database {
     await userCollection
         .doc(uid)
         .update({'total defaulted money': FieldValue.delete()});
+    await userCollection
+        .doc(uid)
+        .update({'pending chargebacks': FieldValue.delete()});
+    await userCollection
+        .doc(uid)
+        .update({'total money settled': FieldValue.delete()});
   }
 
   Future<void> handlePaidLoan(Loan loan) async {
@@ -256,7 +261,6 @@ class Database {
 
     // undo defaulted loan changes
     if (loan.status == 'defaulted') {
-      print(loan.amountRepaid);
       _updateTotalProfit(loan.principal);
       _updateTotalDefaulted(-loan.principal);
       _updateTotalInterest(-loan.amountRepaid);
@@ -286,10 +290,25 @@ class Database {
   }
 
   Future<void> handleDefaultedLoan(Loan loan) async {
-    _updateTotalProfit(-loan.principal);
-    _updateTotalDefaulted(loan.principal);
-    _updateTotalInterest(loan.amountRepaid);
-    _updateTotalProfit(loan.amountRepaid);
+    if (loan.amountRepaid < loan.principal) {
+      _updateTotalInterest(loan.amountRepaid);
+      _updateTotalProfit(loan.amountRepaid);
+      _updateTotalProfit(-loan.principal);
+      _updateTotalDefaulted(loan.principal);
+    } else {
+      _updateTotalDefaulted(loan.principal);
+    }
+  }
+
+  Future<void> handleDispute(Loan loan) async {
+    _updateTotalPendingChargebacks(loan.principal);
+  }
+
+  Future<void> handleRefundedLoan(Loan loan) async {
+    _updateTotalPendingChargebacks(-loan.principal);
+    _updateTotalDefaulted(-loan.principal);
+    _updateTotalProfit(loan.principal);
+    _updateTotalMoneySettled(loan.principal);
   }
 
   Future<void> _updateTotalMoneyLent(double amount) async {
@@ -330,5 +349,17 @@ class Database {
     await userCollection
         .doc(uid)
         .update({'total defaulted money': FieldValue.increment(amount)});
+  }
+
+  Future<void> _updateTotalPendingChargebacks(double amount) async {
+    await userCollection
+        .doc(uid)
+        .update({'pending chargebacks': FieldValue.increment(amount)});
+  }
+
+  Future<void> _updateTotalMoneySettled(double amount) async {
+    await userCollection
+        .doc(uid)
+        .update({'total money settled': FieldValue.increment(amount)});
   }
 }

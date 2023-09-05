@@ -151,7 +151,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
     ElevatedButton disputeBtn = ElevatedButton(
       style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
       onPressed: () {
-        // TODO add principal to 'pending chargebacks' sum
+        Database(uid: _auth.user!.uid).handleDispute(widget.loan!);
         status = 'disputed';
         onSubmit();
       },
@@ -160,19 +160,10 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
     ElevatedButton refundBtn = ElevatedButton(
       style: ElevatedButton.styleFrom(backgroundColor: Colors.pink),
       onPressed: () async {
-        // TODO deduct principal from 'total defaulted sum'
-        // TODO deduct from 'pending chargebacks' sum
-        double? enteredAmount = await showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return PaymentDialog();
-          },
-        );
-        if (enteredAmount != null) {
-          status = 'refunded';
-          amountRepaid += enteredAmount;
-          onSubmit();
-        }
+        status = 'refunded';
+        await Database(uid: _auth.user!.uid).handleRefundedLoan(widget.loan!);
+        amountRepaid += widget.loan!.principal;
+        onSubmit();
       },
       child: Text('refunded'),
     );
@@ -220,9 +211,8 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                               .deleteLoan(widget.loan!);
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text("Delete in progress")),
-                            );
+                            SnackBar(content: Text("Delete in progress")),
+                          );
                         },
                         icon: Icon(Icons.delete),
                       )
@@ -696,6 +686,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
               '${DateTime.now()}\nLoan Item Created\nLoan Amount: $loanAmount\nRepay Amount: $repayAmount\nRepay Date: ${formatDate(repayDate)}\n\n');
       await Database(uid: _auth.user!.uid).addLoan(newLoan);
     }
+    widget.onFormSubmit();
     Navigator.pop(context);
   }
 }

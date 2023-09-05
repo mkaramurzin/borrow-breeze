@@ -48,7 +48,11 @@ class _LoanViewState extends State<LoanView> {
         await showDialog(
           context: context,
           builder: (context) => LoanFormDialog(
-            onFormSubmit: () {},
+            onFormSubmit: () {
+              setState(() {
+                
+              });
+            },
           ),
         );
         setState(() {});
@@ -99,6 +103,7 @@ class _LoanViewState extends State<LoanView> {
               ),
             ),
           ),
+          
           // TODO delete in production
           ElevatedButton(
             onPressed: () async {
@@ -109,6 +114,7 @@ class _LoanViewState extends State<LoanView> {
             },
             child: Icon(Icons.autorenew),
           ),
+
           PopupMenuButton<int>(
               onSelected: (item) {
                 menuOption(item);
