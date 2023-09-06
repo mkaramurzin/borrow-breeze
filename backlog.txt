@@ -102,7 +102,7 @@ done        i. Average interest
         a. Total Historic, Projected, and Operational Profit
         b. Total Expenses
 done        c. Total $ Defaulted
-        d. Pending chargebacks
+done        d. Pending chargebacks
         e. total loans
         f. Total ongoing loans
         g. Total Completed loans

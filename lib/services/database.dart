@@ -44,6 +44,7 @@ class Database {
     });
 
     _updateTotalMoneyLent(loan.principal);
+    _updateFundsInLoan(loan.principal);
   }
 
   Future<void> deleteLoan(Loan loan) async {
@@ -254,6 +255,9 @@ class Database {
     await userCollection
         .doc(uid)
         .update({'total money settled': FieldValue.delete()});
+    await userCollection
+        .doc(uid)
+        .update({'funds out in loan': FieldValue.delete()});
   }
 
   Future<void> handlePaidLoan(Loan loan) async {
@@ -274,22 +278,27 @@ class Database {
     } else {
       _updateTotalInterest(loan.interest);
       _updateTotalProfit(loan.interest);
+      _updateFundsInLoan(-(loan.principal - loan.amountRepaid));
     }
   }
 
   Future<void> handlePartialPayment(Loan loan, double amount) async {
     _updateTotalMoneyRepaid(amount);
+    _updateFundsInLoan(-amount);
 
     if (loan.amountRepaid >= loan.principal) {
       _updateTotalInterest(amount);
       _updateTotalProfit(amount);
+      _updateFundsInLoan(amount);
     } else if (amount + loan.amountRepaid > loan.principal) {
       _updateTotalInterest((amount + loan.amountRepaid) - loan.principal);
       _updateTotalProfit((amount + loan.amountRepaid) - loan.principal);
+      _updateFundsInLoan(loan.amountRepaid + amount - loan.principal);
     }
   }
 
   Future<void> handleDefaultedLoan(Loan loan) async {
+    _updateFundsInLoan(-loan.principal);
     if (loan.amountRepaid < loan.principal) {
       _updateTotalInterest(loan.amountRepaid);
       _updateTotalProfit(loan.amountRepaid);
@@ -361,5 +370,11 @@ class Database {
     await userCollection
         .doc(uid)
         .update({'total money settled': FieldValue.increment(amount)});
+  }
+
+  Future<void> _updateFundsInLoan(double amount) async {
+    await userCollection
+        .doc(uid)
+        .update({'funds out in loan': FieldValue.increment(amount)});
   }
 }
