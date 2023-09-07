@@ -91,7 +91,7 @@ done        a. ROI
 done        b. Duration
 done        c. Payment Protection fee calculation
         d. default rate
-        e. Working funds
+done        e. funds out in loan
         f. Historic, Projected, and Operational data
 done        g. Interest
 done        h. Average loan principal

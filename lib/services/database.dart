@@ -43,8 +43,9 @@ class Database {
       'changelog': loan.changeLog
     });
 
-    _updateTotalMoneyLent(loan.principal);
+    await _updateTotalMoneyLent(loan.principal);
     _updateFundsInLoan(loan.principal);
+    _updateProjectedProfit(loan.interest);
   }
 
   Future<void> deleteLoan(Loan loan) async {
@@ -258,6 +259,9 @@ class Database {
     await userCollection
         .doc(uid)
         .update({'funds out in loan': FieldValue.delete()});
+    await userCollection
+        .doc(uid)
+        .update({'projected profit': FieldValue.delete()});
   }
 
   Future<void> handlePaidLoan(Loan loan) async {
@@ -303,6 +307,9 @@ class Database {
       _updateTotalInterest(loan.amountRepaid);
       _updateTotalProfit(loan.amountRepaid);
       _updateTotalProfit(-loan.principal);
+      _updateProjectedProfit(loan.amountRepaid);
+      _updateProjectedProfit(-loan.principal);
+      _updateProjectedProfit(-loan.interest);
       _updateTotalDefaulted(loan.principal);
     } else {
       _updateTotalDefaulted(loan.principal);
@@ -311,6 +318,7 @@ class Database {
 
   Future<void> handleDispute(Loan loan) async {
     _updateTotalPendingChargebacks(loan.principal);
+    _updateProjectedProfit(loan.principal);
   }
 
   Future<void> handleRefundedLoan(Loan loan) async {
@@ -376,5 +384,11 @@ class Database {
     await userCollection
         .doc(uid)
         .update({'funds out in loan': FieldValue.increment(amount)});
+  }
+
+  Future<void> _updateProjectedProfit(double amount) async {
+    await userCollection
+        .doc(uid)
+        .update({'projected profit': FieldValue.increment(amount)});
   }
 }
