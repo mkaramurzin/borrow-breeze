@@ -176,7 +176,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
       case 'defaulted':
         return [paidBtn, disputeBtn];
       case 'disputed':
-        return [refundBtn];
+        return [refundBtn, defaultBtn];
       case 'paid':
         return [disputeBtn];
       default:

@@ -302,17 +302,23 @@ class Database {
   }
 
   Future<void> handleDefaultedLoan(Loan loan) async {
-    _updateFundsInLoan(-loan.principal);
-    if (loan.amountRepaid < loan.principal) {
-      _updateTotalInterest(loan.amountRepaid);
-      _updateTotalProfit(loan.amountRepaid);
-      _updateTotalProfit(-loan.principal);
-      _updateProjectedProfit(loan.amountRepaid);
+    // unsuccessful chargeback
+    if (loan.status == 'disputed') {
+      _updateTotalPendingChargebacks(-loan.principal);
       _updateProjectedProfit(-loan.principal);
-      _updateProjectedProfit(-loan.interest);
-      _updateTotalDefaulted(loan.principal);
     } else {
-      _updateTotalDefaulted(loan.principal);
+      if (loan.amountRepaid < loan.principal) {
+        _updateFundsInLoan(-(loan.principal - loan.amountRepaid));
+        _updateTotalInterest(loan.amountRepaid);
+        _updateTotalProfit(loan.amountRepaid);
+        _updateTotalProfit(-loan.principal);
+        _updateProjectedProfit(loan.amountRepaid);
+        _updateProjectedProfit(-loan.principal);
+        _updateProjectedProfit(-loan.interest);
+        _updateTotalDefaulted(loan.principal);
+      } else {
+        _updateTotalDefaulted(loan.principal);
+      }
     }
   }
 
