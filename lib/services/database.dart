@@ -52,6 +52,8 @@ class Database {
     await userCollection.doc(uid).collection('Loans').doc(loan.docID).delete();
 
     _updateTotalMoneyLent(-loan.principal);
+    _updateFundsInLoan(-loan.principal);
+    _updateProjectedProfit(-loan.interest);
   }
 
   Future<List<Loan>> getLoans({LoanFilter? filter}) async {

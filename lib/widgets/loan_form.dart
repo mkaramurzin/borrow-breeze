@@ -22,7 +22,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   List accountNames = [];
   bool showPartialPaymentField = false;
-  TextEditingController loanAmountController = TextEditingController();
+  TextEditingController principalAmountController = TextEditingController();
   bool showCalcFee = false;
 
   String status = 'ongoing';
@@ -30,7 +30,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
   String borrowerUsername = '';
   String financialPlatform = 'PayPal';
   String borrowerName = '';
-  double? loanAmount;
+  double? principalAmount;
   double? repayAmount;
   double? interest;
   double amountRepaid = 0;
@@ -56,7 +56,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
       borrowerUsername = widget.loan!.borrowerUsername;
       financialPlatform = widget.loan!.financialPlatform;
       borrowerName = widget.loan!.borrowerName;
-      loanAmount = widget.loan!.principal;
+      principalAmount = widget.loan!.principal;
       repayAmount = widget.loan!.repayAmount;
       interest = widget.loan!.interest;
       amountRepaid = widget.loan!.amountRepaid;
@@ -74,14 +74,14 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
           .toList();
     }
     if (widget.loan != null) {
-      loanAmountController.text = loanAmount.toString();
+      principalAmountController.text = principalAmount.toString();
     }
   }
 
   void updateMetrics() {
-    if (loanAmount != null && repayAmount != null) {
-      interest = repayAmount! - loanAmount!;
-      roi = LoanLogic.calculateRoiSingle(loanAmount!, repayAmount!);
+    if (principalAmount != null && repayAmount != null) {
+      interest = repayAmount! - principalAmount!;
+      roi = LoanLogic.calculateRoiSingle(principalAmount!, repayAmount!);
     }
     if (originationDate != null && repayDate != null) {
       duration = LoanLogic.calculateDuration(originationDate, repayDate);
@@ -343,15 +343,16 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                     children: [
                       Expanded(
                         child: TextFormField(
-                          controller: loanAmountController,
+                          readOnly: widget.loan != null,
+                          controller: principalAmountController,
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(
-                            labelText: 'Loan Amount',
+                            labelText: 'Principal Amount',
                             border: OutlineInputBorder(),
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter a loan amount';
+                              return 'Please enter an amount';
                             }
                             if (double.tryParse(value) == null ||
                                 double.parse(value) < 1) {
@@ -360,7 +361,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                             return null;
                           },
                           onChanged: (value) {
-                            loanAmount = double.tryParse(value);
+                            principalAmount = double.tryParse(value);
                             updateMetrics();
                             showCalcFee = true;
                           },
@@ -380,7 +381,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter a repay amount';
+                              return 'Please enter an amount';
                             }
                             if (double.tryParse(value) == null ||
                                 double.parse(value) < 1) {
@@ -405,11 +406,11 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                             Text('Calculate Fee'),
                             IconButton(
                               onPressed: () {
-                                loanAmount =
+                                principalAmount =
                                     LoanLogic.calculatePaymentProtectionFee(
-                                        financialPlatform, loanAmount);
-                                loanAmountController.text =
-                                    loanAmount.toString();
+                                        financialPlatform, principalAmount);
+                                principalAmountController.text =
+                                    principalAmount.toString();
                                 updateMetrics();
                                 showCalcFee = false;
                               },
@@ -613,10 +614,6 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
             'BORROWER NAME    ${widget.loan!.borrowerName} -> $borrowerName');
         widget.loan!.borrowerName = borrowerName;
       }
-      if (widget.loan!.principal != loanAmount) {
-        changes.add('LOAN AMOUNT    ${widget.loan!.principal} - > $loanAmount');
-        widget.loan!.principal = loanAmount!;
-      }
       if (widget.loan!.repayAmount != repayAmount) {
         changes
             .add('REPAY AMOUNT    ${widget.loan!.repayAmount} -> $repayAmount');
@@ -672,7 +669,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
           financialPlatform: financialPlatform!,
           borrowerUsername: borrowerUsername,
           borrowerName: borrowerName,
-          principal: loanAmount!,
+          principal: principalAmount!,
           repayAmount: repayAmount!,
           interest: interest!,
           roi: roi!,
@@ -683,7 +680,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
           notes: notes,
           verificationItems: verificationItems,
           changeLog:
-              '${DateTime.now()}\nLoan Item Created\nLoan Amount: $loanAmount\nRepay Amount: $repayAmount\nRepay Date: ${formatDate(repayDate)}\n\n');
+              '${DateTime.now()}\nLoan Item Created\nLoan Amount: $principalAmount\nRepay Amount: $repayAmount\nRepay Date: ${formatDate(repayDate)}\n\n');
       await Database(uid: _auth.user!.uid).addLoan(newLoan);
     }
     widget.onFormSubmit();
