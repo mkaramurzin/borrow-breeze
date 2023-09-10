@@ -110,6 +110,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
           backgroundColor: Color.fromARGB(255, 130, 206, 133)),
       onPressed: () async {
         status = 'paid';
+        await onSubmit();
         amountRepaid = widget.loan!.repayAmount;
         Database(uid: _auth.user!.uid).handlePaidLoan(widget.loan!);
         onSubmit();
@@ -615,8 +616,12 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
         widget.loan!.borrowerName = borrowerName;
       }
       if (widget.loan!.repayAmount != repayAmount) {
+        widget.loan!.interest = repayAmount! - principalAmount!;
+        widget.loan!.roi = roi!;
         changes
             .add('REPAY AMOUNT    ${widget.loan!.repayAmount} -> $repayAmount');
+        await Database(uid: _auth.user!.uid)
+            .handleRepayChange(widget.loan!, repayAmount!);
         widget.loan!.repayAmount = repayAmount!;
       }
       if (widget.loan!.amountRepaid != amountRepaid) {

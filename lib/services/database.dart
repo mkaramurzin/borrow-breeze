@@ -141,7 +141,9 @@ class Database {
       'borrower name': loan.borrowerName,
       'amount': loan.principal,
       'repay amount': loan.repayAmount,
+      'interest': loan.interest,
       'amount repaid': loan.amountRepaid,
+      'roi': loan.roi,
       'origination date': loan.originationDate,
       'repay date': loan.repayDate,
       'request link': loan.requestLink,
@@ -268,6 +270,7 @@ class Database {
 
   Future<void> handlePaidLoan(Loan loan) async {
     _updateTotalMoneyRepaid(loan.repayAmount - loan.amountRepaid);
+    print(loan.amountRepaid);
 
     // undo defaulted loan changes
     if (loan.status == 'defaulted') {
@@ -282,6 +285,7 @@ class Database {
           loan.interest - (loan.amountRepaid - loan.principal));
       _updateTotalProfit(loan.interest - (loan.amountRepaid - loan.principal));
     } else {
+      print(loan.interest);
       _updateTotalInterest(loan.interest);
       _updateTotalProfit(loan.interest);
       _updateFundsInLoan(-(loan.principal - loan.amountRepaid));
@@ -334,6 +338,10 @@ class Database {
     _updateTotalDefaulted(-loan.principal);
     _updateTotalProfit(loan.principal);
     _updateTotalMoneySettled(loan.principal);
+  }
+
+  Future<void> handleRepayChange(Loan loan, double newAmount) async {
+    _updateProjectedProfit(newAmount - loan.repayAmount);
   }
 
   Future<void> _updateTotalMoneyLent(double amount) async {
