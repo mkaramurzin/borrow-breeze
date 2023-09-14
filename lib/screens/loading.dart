@@ -12,7 +12,7 @@ class _LoadingState extends State<Loading> {
   
   void setup() async {
     await Future.delayed(Duration.zero);
-    Navigator.pushNamedAndRemoveUntil(context, '/loanlist', (route) => false);
+    Navigator.pushNamedAndRemoveUntil(context, '/loans', (route) => false);
   }
 
   @override

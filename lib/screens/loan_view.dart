@@ -1,3 +1,4 @@
+import 'package:borrowbreeze/screens/metrics_view.dart';
 import 'package:borrowbreeze/services/loan_logic.dart';
 import 'package:borrowbreeze/widgets/loan_item.dart';
 import 'package:borrowbreeze/services/database.dart';
@@ -152,7 +153,10 @@ class _LoanViewState extends State<LoanView>
           ],
         ),
       ),
-      body: TabBarView(controller: _tabController, children: [
+      body: TabBarView(
+      controller: _tabController, 
+      physics: NeverScrollableScrollPhysics(),
+      children: [
         FutureBuilder<List<Loan>>(
           future: fetchLoanList(),
           builder: (context, snapshot) {
@@ -288,7 +292,7 @@ class _LoanViewState extends State<LoanView>
             );
           },
         ),
-        Center(child: Text('This is the Numbers Tab')),
+        MetricsView(),
         Center(child: Text('This is the Expenses Tab')),
       ]),
     );

@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
               initialRoute: '/',
               routes: {
                 '/': (context) => Wrapper(),
-                '/loanlist': (context) => LoanView(),
+                '/loans': (context) => LoanView(),
               },
             );
           } else if (snapshot.hasError) {
