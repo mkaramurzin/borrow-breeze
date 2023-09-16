@@ -99,7 +99,7 @@ done        i. Average interest
         j. Yearly, quarterly, and monthly business report
 
     - all business logic sums
-        a. Total Historic, Projected, and Operational Profit
+done        a. Total Historic, Projected, and Operational Profit
         b. Total Expenses
 done        c. Total $ Defaulted
 done        d. Pending chargebacks

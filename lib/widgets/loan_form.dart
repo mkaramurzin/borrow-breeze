@@ -164,6 +164,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
         status = 'refunded';
         await Database(uid: _auth.user!.uid).handleRefundedLoan(widget.loan!);
         amountRepaid += widget.loan!.principal;
+        amountRepaid = (amountRepaid * 100).roundToDouble() / 100;
         onSubmit();
       },
       child: Text('refunded'),
@@ -589,9 +590,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
     if (widget.loan != null) {
       List<String> changes = [];
       changes.add(formatDate(DateTime.now()));
-      if (widget.loan!.status != status &&
-          widget.loan!.status != 'paid' &&
-          widget.loan!.status != 'refunded') {
+      if (widget.loan!.status != status) {
         changes.add('STATUS    ${widget.loan!.status} -> $status');
         widget.loan!.status = status;
       }

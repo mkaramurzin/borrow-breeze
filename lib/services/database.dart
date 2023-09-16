@@ -44,13 +44,14 @@ class Database {
     });
 
     await _updateTotalMoneyLent(loan.principal);
+    _updateTotalLoanCount(1, 'total loans');
     _updateFundsInLoan(loan.principal);
     _updateProjectedProfit(loan.interest);
   }
 
   Future<void> deleteLoan(Loan loan) async {
     await userCollection.doc(uid).collection('Loans').doc(loan.docID).delete();
-
+    _updateTotalLoanCount(-1, 'total loans');
     _updateTotalMoneyLent(-loan.principal);
     _updateFundsInLoan(-loan.principal);
     _updateProjectedProfit(-loan.interest);
@@ -266,14 +267,22 @@ class Database {
     await userCollection
         .doc(uid)
         .update({'projected profit': FieldValue.delete()});
+    await userCollection.doc(uid).update({'total loans': FieldValue.delete()});
+    await userCollection
+        .doc(uid)
+        .update({'total completed loans': FieldValue.delete()});
+    await userCollection
+        .doc(uid)
+        .update({'total defaults': FieldValue.delete()});
   }
 
   Future<void> handlePaidLoan(Loan loan) async {
     _updateTotalMoneyRepaid(loan.repayAmount - loan.amountRepaid);
-    print(loan.amountRepaid);
+    _updateTotalLoanCount(1, 'total completed loans');
 
     // undo defaulted loan changes
     if (loan.status == 'defaulted') {
+      _updateTotalLoanCount(-1, 'total completed loans');
       _updateTotalProfit(loan.principal);
       _updateTotalDefaulted(-loan.principal);
       _updateTotalInterest(-loan.amountRepaid);
@@ -285,7 +294,6 @@ class Database {
           loan.interest - (loan.amountRepaid - loan.principal));
       _updateTotalProfit(loan.interest - (loan.amountRepaid - loan.principal));
     } else {
-      print(loan.interest);
       _updateTotalInterest(loan.interest);
       _updateTotalProfit(loan.interest);
       _updateFundsInLoan(-(loan.principal - loan.amountRepaid));
@@ -313,6 +321,7 @@ class Database {
       _updateTotalPendingChargebacks(-loan.principal);
       _updateProjectedProfit(-loan.principal);
     } else {
+      _updateTotalLoanCount(1, 'total defaults');
       if (loan.amountRepaid < loan.principal) {
         _updateFundsInLoan(-(loan.principal - loan.amountRepaid));
         _updateTotalInterest(loan.amountRepaid);
@@ -342,6 +351,22 @@ class Database {
 
   Future<void> handleRepayChange(Loan loan, double newAmount) async {
     _updateProjectedProfit(newAmount - loan.repayAmount);
+  }
+
+  Future<void> _updateTotalLoanCount(int amount, String type) async {
+    DocumentSnapshot userDoc = await userCollection.doc(uid).get();
+
+    if (userDoc.exists) {
+      // If the document exists, increment (or create) the value
+      await userCollection
+          .doc(uid)
+          .update({type: FieldValue.increment(amount)});
+    } else {
+      // If the document doesn't exist, set the value
+      await userCollection
+          .doc(uid)
+          .set({type: amount}, SetOptions(merge: true));
+    }
   }
 
   Future<void> _updateTotalMoneyLent(double amount) async {
@@ -409,6 +434,21 @@ class Database {
   }
 
   // Accessor methods below
+
+  Future<int> getTotalLoans() async {
+    DocumentSnapshot userDoc = await userCollection.doc(uid).get();
+    return userDoc['total loans'] ?? 0;
+  }
+
+  Future<int> getTotalCompletedLoans() async {
+    DocumentSnapshot userDoc = await userCollection.doc(uid).get();
+    return userDoc['total completed loans'] ?? 0;
+  }
+
+  Future<int> getTotalDefaults() async {
+    DocumentSnapshot userDoc = await userCollection.doc(uid).get();
+    return userDoc['total defaulted loans'] ?? 0;
+  }
 
   Future<double> getOwnerEquity() async {
     DocumentSnapshot userDoc = await userCollection.doc(uid).get();
