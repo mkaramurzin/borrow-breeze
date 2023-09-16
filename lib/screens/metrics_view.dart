@@ -2,6 +2,7 @@ import 'package:borrowbreeze/services/auth.dart';
 import 'package:borrowbreeze/services/database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:borrowbreeze/services/loan_logic.dart';
 
 class MetricsView extends StatelessWidget {
   const MetricsView({super.key});
@@ -20,6 +21,7 @@ class MetricsView extends StatelessWidget {
         _buildDataTile(context, "Pending Chargebacks", Database(uid: _auth.user!.uid).getTotalPendingChargebacks),
         _buildDataTile(context, "Total Money Settled", Database(uid: _auth.user!.uid).getTotalMoneySettled),
         _buildDataTile(context, "Funds Out In Loan", Database(uid: _auth.user!.uid).getFundsInLoan),
+        _buildDataTile(context, "Operational Profit", LoanLogic().calculateOperationalProfit),
         _buildDataTile(context, "Projected Profit", Database(uid: _auth.user!.uid).getProjectedProfit),
       ],
     );

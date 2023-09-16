@@ -408,55 +408,53 @@ class Database {
         .update({'projected profit': FieldValue.increment(amount)});
   }
 
-  // Getter for total money lent
+  // Accessor methods below
+
+  Future<double> getOwnerEquity() async {
+    DocumentSnapshot userDoc = await userCollection.doc(uid).get();
+    return userDoc['owner equity'] ?? 0.0;
+  }
+
   Future<double> getTotalMoneyLent() async {
     DocumentSnapshot userDoc = await userCollection.doc(uid).get();
     return userDoc['total money lent'] ?? 0.0;
   }
 
-// Getter for total money repaid
   Future<double> getTotalMoneyRepaid() async {
     DocumentSnapshot userDoc = await userCollection.doc(uid).get();
     return userDoc['total money repaid'] ?? 0.0;
   }
 
-// Getter for total interest
   Future<double> getTotalInterest() async {
     DocumentSnapshot userDoc = await userCollection.doc(uid).get();
     return userDoc['total interest'] ?? 0.0;
   }
 
-// Getter for total profit
   Future<double> getTotalProfit() async {
     DocumentSnapshot userDoc = await userCollection.doc(uid).get();
     return userDoc['total profit'] ?? 0.0;
   }
 
-// Getter for total defaulted money
   Future<double> getTotalDefaulted() async {
     DocumentSnapshot userDoc = await userCollection.doc(uid).get();
     return userDoc['total defaulted money'] ?? 0.0;
   }
 
-// Getter for pending chargebacks
   Future<double> getTotalPendingChargebacks() async {
     DocumentSnapshot userDoc = await userCollection.doc(uid).get();
     return userDoc['pending chargebacks'] ?? 0.0;
   }
 
-// Getter for total money settled
   Future<double> getTotalMoneySettled() async {
     DocumentSnapshot userDoc = await userCollection.doc(uid).get();
     return userDoc['total money settled'] ?? 0.0;
   }
 
-// Getter for funds out in loan
   Future<double> getFundsInLoan() async {
     DocumentSnapshot userDoc = await userCollection.doc(uid).get();
     return userDoc['funds out in loan'] ?? 0.0;
   }
 
-// Getter for projected profit
   Future<double> getProjectedProfit() async {
     DocumentSnapshot userDoc = await userCollection.doc(uid).get();
     return userDoc['projected profit'] ?? 0.0;

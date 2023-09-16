@@ -1,8 +1,12 @@
 import 'package:borrowbreeze/models/loan.dart';
+import 'package:borrowbreeze/services/auth.dart';
+import 'package:borrowbreeze/services/database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 // Business logic class
 class LoanLogic {
+  Database db = Database(uid: AuthService().user!.uid);
+
   // Calculate ROI for a single loan
   static double calculateRoiSingle(double principal, double repayAmount) {
     if (principal == 0) return 0.0; // To avoid division by zero
@@ -79,5 +83,14 @@ class LoanLogic {
       return ((amount) * 100).roundToDouble() / 100;
     }
     return 0;
+  }
+
+  // Calculate operational profit
+  Future<double> calculateOperationalProfit() async {
+    double pendingChargebacks = await db.getTotalPendingChargebacks();
+    double projectedProfit = await db.getProjectedProfit();
+    double profit = await db.getTotalProfit();
+
+    return projectedProfit - profit - pendingChargebacks;
   }
 }
