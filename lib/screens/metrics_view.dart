@@ -13,6 +13,8 @@ class MetricsView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _buildDataTile(context, "Owner Equity", Database(uid: _auth.user!.uid).getOwnerEquity),
+        _buildDataTile(context, "Available Liquid", LoanLogic().calculateAvailableLiquid),
         _buildDataTile(context, "Total Money Lent", Database(uid: _auth.user!.uid).getTotalMoneyLent),
         _buildDataTile(context, "Total Money Repaid", Database(uid: _auth.user!.uid).getTotalMoneyRepaid),
         _buildDataTile(context, "Total Interest", Database(uid: _auth.user!.uid).getTotalInterest),

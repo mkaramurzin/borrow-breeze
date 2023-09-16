@@ -93,4 +93,14 @@ class LoanLogic {
 
     return projectedProfit - profit - pendingChargebacks;
   }
+
+  // Calculate available liquid
+  Future<double> calculateAvailableLiquid() async {
+    double equity = await db.getOwnerEquity();
+    double fundsInLoan = await db.getFundsInLoan();
+    double profit = await db.getTotalProfit();
+
+    return equity + profit - fundsInLoan;
+  }
+
 }
