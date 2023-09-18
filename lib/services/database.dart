@@ -436,67 +436,119 @@ class Database {
   // Accessor methods below
 
   Future<int> getTotalLoans() async {
-    DocumentSnapshot userDoc = await userCollection.doc(uid).get();
-    return userDoc['total loans'] ?? 0;
+    try {
+      DocumentSnapshot userDoc = await userCollection.doc(uid).get();
+      return userDoc['total loans'] ?? 0;
+    } catch (error) {
+      return 0;
+    }
   }
 
   Future<int> getTotalCompletedLoans() async {
-    DocumentSnapshot userDoc = await userCollection.doc(uid).get();
-    return userDoc['total completed loans'] ?? 0;
+    try {
+      DocumentSnapshot userDoc = await userCollection.doc(uid).get();
+      return userDoc['total completed loans'] ?? 0;
+    } catch (error) {
+      return 0;
+    }
   }
 
   Future<int> getTotalDefaults() async {
-    DocumentSnapshot userDoc = await userCollection.doc(uid).get();
-    return userDoc['total defaults'] ?? 0;
+    try {
+      DocumentSnapshot userDoc = await userCollection.doc(uid).get();
+      return userDoc['total defaults'] ?? 0;
+    } catch (error) {
+      return 0;
+    }
   }
 
   Future<double> getOwnerEquity() async {
-    DocumentSnapshot userDoc = await userCollection.doc(uid).get();
-    return userDoc['owner equity'] ?? 0.0;
+    try {
+      DocumentSnapshot userDoc = await userCollection.doc(uid).get();
+      return userDoc['equity'] ?? 0.0;
+    } catch (error) {
+      return 0.0;
+    }
   }
 
   Future<double> getTotalMoneyLent() async {
-    DocumentSnapshot userDoc = await userCollection.doc(uid).get();
-    return userDoc['total money lent'] ?? 0.0;
+    try {
+      DocumentSnapshot userDoc = await userCollection.doc(uid).get();
+      return userDoc['total money lent'] ?? 0.0;
+    } catch (error) {
+      return 0.0;
+    }
   }
 
   Future<double> getTotalMoneyRepaid() async {
-    DocumentSnapshot userDoc = await userCollection.doc(uid).get();
-    return userDoc['total money repaid'] ?? 0.0;
+    try {
+      DocumentSnapshot userDoc = await userCollection.doc(uid).get();
+      return userDoc['total money repaid'] ?? 0.0;
+    } catch (error) {
+      return 0.0;
+    }
   }
 
   Future<double> getTotalInterest() async {
-    DocumentSnapshot userDoc = await userCollection.doc(uid).get();
-    return userDoc['total interest'] ?? 0.0;
+    try {
+      DocumentSnapshot userDoc = await userCollection.doc(uid).get();
+      return userDoc['total interest'] ?? 0.0;
+    } catch (error) {
+      return 0.0;
+    }
   }
 
   Future<double> getTotalProfit() async {
-    DocumentSnapshot userDoc = await userCollection.doc(uid).get();
-    return userDoc['total profit'] ?? 0.0;
+    try {
+      DocumentSnapshot userDoc = await userCollection.doc(uid).get();
+      return userDoc['total profit'] ?? 0.0;
+    } catch (error) {
+      return 0.0;
+    }
   }
 
   Future<double> getTotalDefaulted() async {
-    DocumentSnapshot userDoc = await userCollection.doc(uid).get();
-    return userDoc['total defaulted money'] ?? 0.0;
+    try {
+      DocumentSnapshot userDoc = await userCollection.doc(uid).get();
+      return userDoc['total defaulted money'] ?? 0.0;
+    } catch (error) {
+      return 0.0;
+    }
   }
 
   Future<double> getTotalPendingChargebacks() async {
-    DocumentSnapshot userDoc = await userCollection.doc(uid).get();
-    return userDoc['pending chargebacks'] ?? 0.0;
+    try {
+      DocumentSnapshot userDoc = await userCollection.doc(uid).get();
+      return userDoc['pending chargebacks'] ?? 0.0;
+    } catch (error) {
+      return 0.0;
+    }
   }
 
   Future<double> getTotalMoneySettled() async {
-    DocumentSnapshot userDoc = await userCollection.doc(uid).get();
-    return userDoc['total money settled'] ?? 0.0;
+    try {
+      DocumentSnapshot userDoc = await userCollection.doc(uid).get();
+      return userDoc['total money settled'] ?? 0.0;
+    } catch (error) {
+      return 0.0;
+    }
   }
 
   Future<double> getFundsInLoan() async {
-    DocumentSnapshot userDoc = await userCollection.doc(uid).get();
-    return userDoc['funds out in loan'] ?? 0.0;
+    try {
+      DocumentSnapshot userDoc = await userCollection.doc(uid).get();
+      return userDoc['funds out in loan'] ?? 0.0;
+    } catch (error) {
+      return 0.0;
+    }
   }
 
   Future<double> getProjectedProfit() async {
-    DocumentSnapshot userDoc = await userCollection.doc(uid).get();
-    return userDoc['projected profit'] ?? 0.0;
+    try {
+      DocumentSnapshot userDoc = await userCollection.doc(uid).get();
+      return userDoc['projected profit'] ?? 0.0;
+    } catch (error) {
+      return 0.0;
+    }
   }
 }
