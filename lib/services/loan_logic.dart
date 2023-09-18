@@ -103,4 +103,28 @@ class LoanLogic {
     return equity + profit - fundsInLoan;
   }
 
+  // Calculate total business ROI
+  Future<double> calculateTotalROI() async {
+    double repaid = await db.getTotalMoneyRepaid();
+    double profit = await db.getTotalProfit();
+
+    return profit / repaid;
+  }
+
+  // Calculate ROI on funds in loan
+  Future<double> calculateOperationalROI() async {
+    double fundsInLoan = await db.getFundsInLoan();
+    double profit = await calculateOperationalProfit();
+
+    return profit / fundsInLoan;
+  }
+
+  // Calculate projected ROI
+  Future<double> calculateProjectedROI() async {
+    double lent = await db.getTotalMoneyLent();
+    double profit = await db.getProjectedProfit();
+
+    return profit / lent;
+  }
+
 }

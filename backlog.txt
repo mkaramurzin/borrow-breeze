@@ -92,7 +92,7 @@ done        b. Duration
 done        c. Payment Protection fee calculation
         d. default rate
 done        e. funds out in loan
-        f. Historic, Projected, and Operational data
+done        f. Historic, Projected, and Operational data
 done        g. Interest
 done        h. Average loan principal
 done        i. Average interest
@@ -103,9 +103,9 @@ done        a. Total Historic, Projected, and Operational Profit
         b. Total Expenses
 done        c. Total $ Defaulted
 done        d. Pending chargebacks
-        e. total loans
+done        e. total loans
         f. Total ongoing loans
-        g. Total Completed loans
+done        g. Total Completed loans
 done        h. Total $ lent
 done        i. Total $ repaid
 done        j. Total interest
