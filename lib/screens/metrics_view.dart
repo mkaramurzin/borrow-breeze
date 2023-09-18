@@ -18,8 +18,6 @@ class MetricsView extends StatelessWidget {
               Database(uid: _auth.user!.uid).getTotalLoans),
           _buildDataTile(context, "Total Completed Loans",
               Database(uid: _auth.user!.uid).getTotalCompletedLoans),
-          _buildDataTile(context, "Total Defaults",
-              Database(uid: _auth.user!.uid).getTotalDefaults),
           _buildDataTile(context, "Owner Equity",
               Database(uid: _auth.user!.uid).getOwnerEquity),
           _buildDataTile(
@@ -33,8 +31,11 @@ class MetricsView extends StatelessWidget {
           _buildDataTile(context, "Total Profit",
               Database(uid: _auth.user!.uid).getTotalProfit),
           _buildDataTile(context, "ROI", LoanLogic().calculateTotalROI),
+                    _buildDataTile(context, "Total Defaults",
+              Database(uid: _auth.user!.uid).getTotalDefaults),
           _buildDataTile(context, "Total Defaulted Money",
               Database(uid: _auth.user!.uid).getTotalDefaulted),
+          _buildDataTile(context, "Default Rate", LoanLogic().calculateDefaultRate),
           _buildDataTile(context, "Pending Chargebacks",
               Database(uid: _auth.user!.uid).getTotalPendingChargebacks),
           _buildDataTile(context, "Total Money Settled",
@@ -75,7 +76,7 @@ class MetricsView extends StatelessWidget {
             dataText = snapshot.data.toString();
           } else if (snapshot.data is double) {
             // Check if the title matches any of the ROI titles
-            if (title.contains("ROI")) {
+            if (title.contains("ROI") || title.contains("Rate")) {
               // Convert double to percentage
               dataText = '${(snapshot.data * 100).toStringAsFixed(2)}%';
             } else {

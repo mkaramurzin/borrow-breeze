@@ -90,7 +90,7 @@ what's missing:
 done        a. ROI
 done        b. Duration
 done        c. Payment Protection fee calculation
-        d. default rate
+done        d. default rate
 done        e. funds out in loan
 done        f. Historic, Projected, and Operational data
 done        g. Interest

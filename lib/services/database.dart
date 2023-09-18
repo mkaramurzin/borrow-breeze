@@ -447,7 +447,7 @@ class Database {
 
   Future<int> getTotalDefaults() async {
     DocumentSnapshot userDoc = await userCollection.doc(uid).get();
-    return userDoc['total defaulted loans'] ?? 0;
+    return userDoc['total defaults'] ?? 0;
   }
 
   Future<double> getOwnerEquity() async {

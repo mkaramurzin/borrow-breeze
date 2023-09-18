@@ -127,4 +127,12 @@ class LoanLogic {
     return profit / lent;
   }
 
+  // Calculate default rate
+  Future<double> calculateDefaultRate() async {
+    int loanCount = await db.getTotalLoans();
+    int defaultCount = await db.getTotalDefaults();
+
+    return defaultCount / loanCount;
+  }
+
 }
