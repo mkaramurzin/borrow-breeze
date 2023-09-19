@@ -9,48 +9,39 @@ class MetricsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AuthService _auth = AuthService();
-    final database = Database(uid: _auth.user!.uid);
+    final database = Database(uid: AuthService().user!.uid);
     final logic = LoanLogic();
 
     // List of metric tiles
     List<Widget> metricTiles = [
+      _buildDataTile(context, "Total Loans", database.getTotalLoans),
       _buildDataTile(
-          context, "Total Loans", Database(uid: _auth.user!.uid).getTotalLoans),
-      _buildDataTile(context, "Total Completed Loans",
-          Database(uid: _auth.user!.uid).getTotalCompletedLoans),
-      _buildDataTile(context, "Owner Equity",
-          Database(uid: _auth.user!.uid).getOwnerEquity),
+          context, "Total Completed Loans", database.getTotalCompletedLoans),
+      _buildDataTile(context, "Owner Equity", database.getOwnerEquity),
       _buildDataTile(
-          context, "Available Liquid", LoanLogic().calculateAvailableLiquid),
-      _buildDataTile(context, "Total Money Lent",
-          Database(uid: _auth.user!.uid).getTotalMoneyLent),
-      _buildDataTile(context, "Total Money Repaid",
-          Database(uid: _auth.user!.uid).getTotalMoneyRepaid),
-      _buildDataTile(context, "Total Interest",
-          Database(uid: _auth.user!.uid).getTotalInterest),
-      _buildDataTile(context, "Total Profit",
-          Database(uid: _auth.user!.uid).getTotalProfit),
-      _buildDataTile(context, "ROI", LoanLogic().calculateTotalROI),
-      _buildDataTile(context, "Total Defaults",
-          Database(uid: _auth.user!.uid).getTotalDefaults),
-      _buildDataTile(context, "Total Defaulted Money",
-          Database(uid: _auth.user!.uid).getTotalDefaulted),
-      _buildDataTile(context, "Default Rate", LoanLogic().calculateDefaultRate),
-      _buildDataTile(context, "Pending Chargebacks",
-          Database(uid: _auth.user!.uid).getTotalPendingChargebacks),
-      _buildDataTile(context, "Total Money Settled",
-          Database(uid: _auth.user!.uid).getTotalMoneySettled),
-      _buildDataTile(context, "Funds Out In Loan",
-          Database(uid: _auth.user!.uid).getFundsInLoan),
-      _buildDataTile(context, "Operational Profit",
-          LoanLogic().calculateOperationalProfit),
+          context, "Available Liquid", logic.calculateAvailableLiquid),
+      _buildDataTile(context, "Total Money Lent", database.getTotalMoneyLent),
       _buildDataTile(
-          context, "Operational ROI", LoanLogic().calculateOperationalROI),
-      _buildDataTile(context, "Projected Profit",
-          Database(uid: _auth.user!.uid).getProjectedProfit),
+          context, "Total Money Repaid", database.getTotalMoneyRepaid),
+      _buildDataTile(context, "Total Interest", database.getTotalInterest),
+      _buildDataTile(context, "Total Profit", database.getTotalProfit),
+      _buildDataTile(context, "ROI", logic.calculateTotalROI),
+      _buildDataTile(context, "Total Defaults", database.getTotalDefaults),
       _buildDataTile(
-          context, "Projected ROI", LoanLogic().calculateProjectedROI),
+          context, "Total Defaulted Money", database.getTotalDefaulted),
+      _buildDataTile(context, "Default Rate", logic.calculateDefaultRate),
+      _buildDataTile(context, "Expenses", database.getTotalExpenses),
+      _buildDataTile(
+          context, "Pending Chargebacks", database.getTotalPendingChargebacks),
+      _buildDataTile(
+          context, "Total Money Settled", database.getTotalMoneySettled),
+      _buildDataTile(context, "Funds Out In Loan", database.getFundsInLoan),
+      _buildDataTile(
+          context, "Operational Profit", logic.calculateOperationalProfit),
+      _buildDataTile(context, "Operational ROI", logic.calculateOperationalROI),
+      _buildDataTile(context, "Projected Liquid", logic.calculateProjectedLiquid),
+      _buildDataTile(context, "Projected Profit", database.getProjectedProfit),
+      _buildDataTile(context, "Projected ROI", logic.calculateProjectedROI),
     ];
 
     return LayoutBuilder(

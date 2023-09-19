@@ -116,7 +116,7 @@ class LoanLogic {
     return profit / denominator;
   }
 
-// Calculate ROI on funds in loan
+  // Calculate ROI on funds in loan
   Future<double> calculateOperationalROI() async {
     double fundsInLoan = await db.getFundsInLoan();
     double profit = await calculateOperationalProfit();
@@ -127,7 +127,7 @@ class LoanLogic {
     return profit / fundsInLoan;
   }
 
-// Calculate projected ROI
+  // Calculate projected ROI
   Future<double> calculateProjectedROI() async {
     double lent = await db.getTotalMoneyLent();
     double profit = await db.getProjectedProfit();
@@ -138,7 +138,7 @@ class LoanLogic {
     return profit / lent;
   }
 
-// Calculate default rate
+  // Calculate default rate
   Future<double> calculateDefaultRate() async {
     int loanCount = await db.getTotalLoans();
     int defaultCount = await db.getTotalDefaults();
@@ -147,5 +147,13 @@ class LoanLogic {
       return 0.0;
     }
     return defaultCount / loanCount.toDouble();
+  }
+
+  // Calculate Projected Liquid
+  Future<double> calculateProjectedLiquid() async {
+    double projectedProfit = await db.getProjectedProfit();
+    double equity = await db.getOwnerEquity();
+
+    return projectedProfit + equity;
   }
 }

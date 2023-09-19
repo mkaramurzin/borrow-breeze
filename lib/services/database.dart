@@ -551,4 +551,13 @@ class Database {
       return 0.0;
     }
   }
+
+  Future<double> getTotalExpenses() async {
+    try {
+      DocumentSnapshot userDoc = await userCollection.doc(uid).get();
+      return userDoc['total expenses'] ?? 0.0;
+    } catch (error) {
+      return 0.0;
+    }
+  }
 }
