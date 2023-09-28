@@ -282,21 +282,30 @@ class Database {
 
     // undo defaulted loan changes
     if (loan.status == 'defaulted') {
-      _updateTotalLoanCount(-1, 'total completed loans');
+      _updateTotalLoanCount(-1, 'total defaults');
       _updateTotalProfit(loan.principal);
       _updateTotalDefaulted(-loan.principal);
-      _updateTotalInterest(-loan.amountRepaid);
-      _updateTotalProfit(-loan.amountRepaid);
-    }
-
-    if (loan.amountRepaid > loan.principal) {
-      _updateTotalInterest(
-          loan.interest - (loan.amountRepaid - loan.principal));
-      _updateTotalProfit(loan.interest - (loan.amountRepaid - loan.principal));
+      if (loan.amountRepaid == 0) {
+        _updateProjectedProfit(loan.repayAmount);
+        _updateTotalProfit(-loan.amountRepaid);
+        _updateTotalInterest(loan.interest);
+        _updateTotalProfit(loan.interest);
+      } else {
+        _updateProjectedProfit(loan.repayAmount - loan.amountRepaid);
+        _updateTotalInterest(loan.repayAmount - loan.amountRepaid);
+        _updateTotalProfit(loan.interest - loan.amountRepaid);
+      }
     } else {
-      _updateTotalInterest(loan.interest);
-      _updateTotalProfit(loan.interest);
-      _updateFundsInLoan(-(loan.principal - loan.amountRepaid));
+      if (loan.amountRepaid > loan.principal) {
+        _updateTotalInterest(
+            loan.interest - (loan.amountRepaid - loan.principal));
+        _updateTotalProfit(
+            loan.interest - (loan.amountRepaid - loan.principal));
+      } else {
+        _updateTotalInterest(loan.interest);
+        _updateTotalProfit(loan.interest);
+        _updateFundsInLoan(-(loan.principal - loan.amountRepaid));
+      }
     }
   }
 
@@ -333,6 +342,7 @@ class Database {
         _updateTotalDefaulted(loan.principal);
       } else {
         _updateTotalDefaulted(loan.principal);
+        _updateProjectedProfit(-(loan.repayAmount - loan.amountRepaid));
       }
     }
   }

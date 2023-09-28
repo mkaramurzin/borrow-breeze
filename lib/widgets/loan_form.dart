@@ -109,10 +109,13 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
       style: ElevatedButton.styleFrom(
           backgroundColor: Color.fromARGB(255, 130, 206, 133)),
       onPressed: () async {
+        String oldStatus = status;
         status = 'paid';
         await onSubmit();
         amountRepaid = widget.loan!.repayAmount;
-        Database(uid: _auth.user!.uid).handlePaidLoan(widget.loan!);
+        widget.loan!.status = oldStatus;
+        await Database(uid: _auth.user!.uid).handlePaidLoan(widget.loan!);
+        widget.loan!.status = 'paid';
         onSubmit();
       },
       child: Text('Paid'),
