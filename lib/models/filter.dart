@@ -9,6 +9,7 @@ class LoanFilter {
   String? borrowerName;
   Timestamp? originationDate;
   Timestamp? repayDate;
+  SortOption? sortOption;
 
   LoanFilter({
     this.docID,
@@ -19,5 +20,13 @@ class LoanFilter {
     this.borrowerName,
     this.originationDate,
     this.repayDate,
+    this.sortOption,
   });
+}
+
+class SortOption {
+  final String field;
+  final bool ascending;
+
+  const SortOption({required this.field, required this.ascending});
 }

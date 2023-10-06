@@ -100,11 +100,11 @@ done        i. Average interest
 
     - all business logic sums
 done        a. Total Historic, Projected, and Operational Profit
-        b. Total Expenses
+done        b. Total Expenses
 done        c. Total $ Defaulted
 done        d. Pending chargebacks
 done        e. total loans
-        f. Total ongoing loans
+done        f. Total ongoing loans
 done        g. Total Completed loans
 done        h. Total $ lent
 done        i. Total $ repaid
@@ -121,6 +121,7 @@ done        j. Total interest
     - Business Numbers display
     - Miscellaneous Credit & Debit (Expenses) logging such as "Azure fee"
     - Color key
+    - Distribution tab
 
 Usability study 1
 Video recording available on screencastify

@@ -105,6 +105,12 @@ class Database {
       }
     }
 
+    if (filter != null && filter.sortOption != null) {
+      // Apply the sort with Firestore
+      loansQuery = loansQuery.orderBy(filter.sortOption!.field,
+          descending: !filter.sortOption!.ascending);
+    }
+
     QuerySnapshot querySnapshot = await loansQuery.get();
 
     return querySnapshot.docs.map((doc) {

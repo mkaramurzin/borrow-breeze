@@ -19,6 +19,8 @@ class _FilterDialogState extends State<FilterDialog> {
   List<String> accountNames = [];
   List<String> borrowerNames = [];
   List<String> borrowerUsernames = [];
+  String sortField = 'repay date';
+  bool sortAscending = true;
   final AuthService _auth = AuthService();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -66,6 +68,83 @@ class _FilterDialogState extends State<FilterDialog> {
           child: Center(
             child: Column(
               children: [
+                // filterRows.every((row) => row.type == 'status' || row.type == 'repayDate')
+                filterRows.every((row) => row.type == 'status')
+                    ? Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              value: sortField,
+                              items: [
+                                'repay date',
+                              ].map((field) {
+                                return DropdownMenuItem(
+                                  child: Text(field),
+                                  value: field,
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                if (value != null) {
+                                  setState(() {
+                                    sortField = value;
+                                  });
+                                }
+                              },
+                              decoration: InputDecoration(
+                                labelText: 'Sort by',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 20,
+                          ),
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              value: sortAscending == true
+                                  ? 'Ascending'
+                                  : 'Descending',
+                              items: [
+                                'Ascending',
+                                'Descending',
+                              ].map((field) {
+                                return DropdownMenuItem(
+                                  child: Text(field),
+                                  value: field,
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                if (value != null) {
+                                  setState(() {
+                                    value == 'Ascending'
+                                        ? sortAscending = true
+                                        : sortAscending = false;
+                                  });
+                                }
+                              },
+                              decoration: InputDecoration(
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 40,
+                          ),
+                        ],
+                      )
+                    : Center(
+                        child: Text(
+                          'Sorting only supported for Filter by Status',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontSize:
+                                14.0,
+                          ),
+                        ),
+                      ),
+                SizedBox(
+                  height: 25,
+                ),
                 ...filterRows.map((filterRow) {
                   return Container(
                     margin: EdgeInsets.only(top: 10),
@@ -128,6 +207,8 @@ class _FilterDialogState extends State<FilterDialog> {
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
                           LoanFilter result = LoanFilter();
+                          bool applySort =
+                              true; // only allow sort on top of filter if sorting by just loan status
                           filterRows.forEach((row) {
                             switch (row.type) {
                               case 'status':
@@ -136,23 +217,32 @@ class _FilterDialogState extends State<FilterDialog> {
                                 break;
                               case 'lenderAccount':
                                 result.lenderAccount = row.value;
+                                applySort = false;
                                 break;
                               case 'borrowerUsername':
                                 result.borrowerUsername = row.value;
+                                applySort = false;
                                 break;
                               case 'borrowerName':
                                 result.borrowerName = row.value;
+                                applySort = false;
                                 break;
                               case 'originationDate':
                                 result.originationDate =
                                     Timestamp.fromDate(row.value);
+                                applySort = false;
                                 break;
                               case 'repayDate':
                                 result.repayDate =
                                     Timestamp.fromDate(row.value);
+                                applySort = false;
                                 break;
                             }
                           });
+                          if (applySort) {
+                            result.sortOption = SortOption(
+                                field: sortField, ascending: sortAscending);
+                          }
                           Navigator.pop(context, result);
                         }
                       },
@@ -418,7 +508,9 @@ class _FilterRowWidgetState extends State<FilterRowWidget> {
                     border: OutlineInputBorder(),
                   ),
                   validator: (value) {
-                    if (value == null || value == '' || selectedUsername == null) {
+                    if (value == null ||
+                        value == '' ||
+                        selectedUsername == null) {
                       return "Username doesn't exist";
                     }
                     return null;

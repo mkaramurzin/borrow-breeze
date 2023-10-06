@@ -27,8 +27,7 @@ class _LoanViewState extends State<LoanView>
   @override
   void initState() {
     super.initState();
-    _tabController =
-        TabController(vsync: this, length: 3);
+    _tabController = TabController(vsync: this, length: 3);
   }
 
   Future<List<Loan>> fetchLoanList() async {
@@ -125,7 +124,10 @@ class _LoanViewState extends State<LoanView>
                   menuOption(item);
                   setState(() {});
                 },
-                icon: Icon(Icons.settings, size: 30,),
+                icon: Icon(
+                  Icons.settings,
+                  size: 30,
+                ),
                 position: PopupMenuPosition.under,
                 itemBuilder: (context) => [
                       PopupMenuItem(
@@ -154,147 +156,154 @@ class _LoanViewState extends State<LoanView>
         ),
       ),
       body: TabBarView(
-      controller: _tabController, 
-      physics: NeverScrollableScrollPhysics(),
-      children: [
-        FutureBuilder<List<Loan>>(
-          future: fetchLoanList(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return Center(child: Text('Error fetching loans.'));
-            }
+          controller: _tabController,
+          physics: NeverScrollableScrollPhysics(),
+          children: [
+            FutureBuilder<List<Loan>>(
+              future: fetchLoanList(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  print(snapshot.error);
+                  return Center(child: Text('Error fetching loans.'));
+                }
 
-            loanList = snapshot.data ?? [];
+                loanList = snapshot.data ?? [];
 
-            return Column(
-              children: [
-                Expanded(
-                  child: Center(
-                    child: loanList.isEmpty
-                        ? Column(
+                return Column(
+                  children: [
+                    Expanded(
+                      child: Center(
+                        child: loanList.isEmpty
+                            ? Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('No loans found',
+                                      style: TextStyle(fontSize: 22)),
+                                  SizedBox(
+                                    height: 12,
+                                  ),
+                                  Container(
+                                    width: 300,
+                                    child: OutlinedButton(
+                                      onPressed: () {
+                                        menuOption(0);
+                                      },
+                                      child: Text(
+                                        'Create a Loan',
+                                        style: TextStyle(fontSize: 18),
+                                      ),
+                                      style: ButtonStyle(
+                                        side: MaterialStateProperty.resolveWith(
+                                            (states) => BorderSide(
+                                                color: Colors.blue, width: 2)),
+                                        padding:
+                                            MaterialStateProperty.resolveWith(
+                                                (states) =>
+                                                    EdgeInsets.symmetric(
+                                                        vertical: 15.0,
+                                                        horizontal: 25.0)),
+                                        textStyle:
+                                            MaterialStateProperty.resolveWith(
+                                                (states) =>
+                                                    TextStyle(fontSize: 18)),
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    margin: EdgeInsets.only(top: 10),
+                                    width: 300,
+                                    child: OutlinedButton(
+                                      onPressed: () {
+                                        menuOption(1);
+                                      },
+                                      child: Text(
+                                        'Apply Filter',
+                                        style: TextStyle(fontSize: 18),
+                                      ),
+                                      style: ButtonStyle(
+                                        side: MaterialStateProperty.resolveWith(
+                                            (states) => BorderSide(
+                                                color: Colors.blue, width: 2)),
+                                        padding:
+                                            MaterialStateProperty.resolveWith(
+                                                (states) =>
+                                                    EdgeInsets.symmetric(
+                                                        vertical: 15.0,
+                                                        horizontal: 25.0)),
+                                        textStyle:
+                                            MaterialStateProperty.resolveWith(
+                                                (states) =>
+                                                    TextStyle(fontSize: 18)),
+                                      ),
+                                    ),
+                                  )
+                                ],
+                              )
+                            : ListView(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: (screenWidth - contentWidth) /
+                                      2, // Center the content
+                                ),
+                                children: loanList!
+                                    .map((loan) => AnimatedContainer(
+                                          duration: Duration(milliseconds: 500),
+                                          width: contentWidth,
+                                          child: LoanItem(loan: loan),
+                                        ))
+                                    .toList(),
+                              ),
+                      ),
+                    ),
+                    Container(
+                      height: MediaQuery.of(context).size.height * 0.05,
+                      color: Colors.blue,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text('No loans found',
-                                  style: TextStyle(fontSize: 22)),
-                              SizedBox(
-                                height: 12,
-                              ),
-                              Container(
-                                width: 300,
-                                child: OutlinedButton(
-                                  onPressed: () {
-                                    menuOption(0);
-                                  },
-                                  child: Text(
-                                    'Create a Loan',
-                                    style: TextStyle(fontSize: 18),
-                                  ),
-                                  style: ButtonStyle(
-                                    side: MaterialStateProperty.resolveWith(
-                                        (states) => BorderSide(
-                                            color: Colors.blue, width: 2)),
-                                    padding: MaterialStateProperty.resolveWith(
-                                        (states) => EdgeInsets.symmetric(
-                                            vertical: 15.0, horizontal: 25.0)),
-                                    textStyle:
-                                        MaterialStateProperty.resolveWith(
-                                            (states) =>
-                                                TextStyle(fontSize: 18)),
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                margin: EdgeInsets.only(top: 10),
-                                width: 300,
-                                child: OutlinedButton(
-                                  onPressed: () {
-                                    menuOption(1);
-                                  },
-                                  child: Text(
-                                    'Apply Filter',
-                                    style: TextStyle(fontSize: 18),
-                                  ),
-                                  style: ButtonStyle(
-                                    side: MaterialStateProperty.resolveWith(
-                                        (states) => BorderSide(
-                                            color: Colors.blue, width: 2)),
-                                    padding: MaterialStateProperty.resolveWith(
-                                        (states) => EdgeInsets.symmetric(
-                                            vertical: 15.0, horizontal: 25.0)),
-                                    textStyle:
-                                        MaterialStateProperty.resolveWith(
-                                            (states) =>
-                                                TextStyle(fontSize: 18)),
-                                  ),
-                                ),
-                              )
+                              Text('Total Items'),
+                              Text(loanList.length.toString()),
                             ],
-                          )
-                        : ListView(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: (screenWidth - contentWidth) /
-                                  2, // Center the content
-                            ),
-                            children: loanList!
-                                .map((loan) => AnimatedContainer(
-                                      duration: Duration(milliseconds: 500),
-                                      width: contentWidth,
-                                      child: LoanItem(loan: loan),
-                                    ))
-                                .toList(),
                           ),
-                  ),
-                ),
-                Container(
-                  height: MediaQuery.of(context).size.height * 0.05,
-                  color: Colors.blue,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('Total Items'),
-                          Text(loanList.length.toString()),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('Average Principal'),
+                              Text(
+                                  '\$${LoanLogic.calculateAverage('principal', loanList)}')
+                            ],
+                          ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('Average Interest'),
+                              Text(
+                                  '\$${LoanLogic.calculateAverage('interest', loanList)}')
+                            ],
+                          ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('Average Duration'),
+                              Text(
+                                  '${LoanLogic.calculateAverage('duration', loanList)} Days')
+                            ],
+                          ),
                         ],
                       ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('Average Principal'),
-                          Text(
-                              '\$${LoanLogic.calculateAverage('principal', loanList)}')
-                        ],
-                      ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('Average Interest'),
-                          Text(
-                              '\$${LoanLogic.calculateAverage('interest', loanList)}')
-                        ],
-                      ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('Average Duration'),
-                          Text(
-                              '${LoanLogic.calculateAverage('duration', loanList)} Days')
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-        MetricsView(),
-        Center(child: Text('This is the Expenses Tab')),
-      ]),
+                    ),
+                  ],
+                );
+              },
+            ),
+            MetricsView(),
+            Center(child: Text('This is the Expenses Tab')),
+          ]),
     );
   }
 }
