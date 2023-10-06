@@ -28,6 +28,18 @@ class _LoanViewState extends State<LoanView>
   void initState() {
     super.initState();
     _tabController = TabController(vsync: this, length: 3);
+
+    _initializeFilter();
+  }
+
+  Future<void> _initializeFilter() async {
+    if (_auth.user != null) {
+      LoanFilter savedFilter =
+          await Database(uid: _auth.user!.uid).fetchUserFilter();
+      setState(() {
+        currentFilter = savedFilter;
+      });
+    }
   }
 
   Future<List<Loan>> fetchLoanList() async {
@@ -48,6 +60,8 @@ class _LoanViewState extends State<LoanView>
       setState(() {
         currentFilter = result;
       });
+      // Save the filter
+      await Database(uid: _auth.user!.uid).saveFilter(result);
     }
   }
 

@@ -161,6 +161,55 @@ class Database {
     });
   }
 
+  // Save Filter
+  Future<void> saveFilter(LoanFilter filter) async {
+    return await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(uid)
+        .collection('Filters')
+        .doc(filter.docID ?? 'defaultFilter')
+        .set({
+      'filterName': filter.filterName,
+      'status': filter.status,
+      'lenderAccount': filter.lenderAccount,
+      'borrowerUsername': filter.borrowerUsername,
+      'borrowerName': filter.borrowerName,
+      'originationDate': filter.originationDate,
+      'repayDate': filter.repayDate,
+      'sortOptionField': filter.sortOption?.field,
+      'sortOptionAscending': filter.sortOption?.ascending,
+    });
+  }
+
+  // Fetch Filter
+  Future<LoanFilter> fetchUserFilter() async {
+    DocumentSnapshot snapshot = await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(uid)
+        .collection('Filters')
+        .doc('defaultFilter')
+        .get();
+    if (snapshot.exists) {
+      Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+      return LoanFilter(
+        docID: snapshot.id,
+        filterName: data['filterName'],
+        status: List<String>.from(data['status'] ?? []),
+        lenderAccount: data['lenderAccount'],
+        borrowerUsername: data['borrowerUsername'],
+        borrowerName: data['borrowerName'],
+        originationDate: data['originationDate'],
+        repayDate: data['repayDate'],
+        sortOption: SortOption(
+          field: data['sortOptionField'] ?? '',
+          ascending: data['sortOptionAscending'] ?? true,
+        ),
+      );
+    } else {
+      return LoanFilter(); // Return default filter if not set
+    }
+  }
+
   Future<List<String>> fetchAccountNames() async {
     // QuerySnapshot accountSnapshot =
     //     await FirebaseFirestore.instance.collection('Accounts').get();
@@ -204,36 +253,6 @@ class Database {
     return uniqueUsernames.toList();
   }
 
-  Future<void> saveFilter(LoanFilter filter, String filterName) async {
-    await userCollection.doc(uid).collection('Filters').add({
-      'filter name': filterName,
-      'status': filter.status,
-      'borrowerUsername': filter.borrowerUsername,
-      'lenderAccount': filter.lenderAccount,
-      'borrowerName': filter.borrowerName,
-      'originationDates': filter.originationDate,
-      'repayDates': filter.repayDate
-    });
-  }
-
-  Future<List<LoanFilter>> getFilters() async {
-    CollectionReference filtersCollection =
-        userCollection.doc(uid).collection('Filters');
-    QuerySnapshot querySnapshot = await filtersCollection.get();
-
-    return querySnapshot.docs.map((doc) {
-      return LoanFilter(
-        docID: doc.id,
-        filterName: doc['filter name'] as String,
-        status: doc['status'] as List<String>,
-        lenderAccount: doc['lender account'] as String?,
-        borrowerUsername: doc['borrower username'] as String?,
-        borrowerName: doc['borrower name'] as String?,
-        originationDate: doc['origination date'] as Timestamp?,
-        repayDate: doc['repay date'] as Timestamp?,
-      );
-    }).toList();
-  }
 
   // Business logic related section below
 
