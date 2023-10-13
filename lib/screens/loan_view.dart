@@ -28,17 +28,25 @@ class _LoanViewState extends State<LoanView>
   void initState() {
     super.initState();
     _tabController = TabController(vsync: this, length: 3);
-
     _initializeFilter();
+  }
+
+  @override
+  void dispose() {
+    _tabController?.dispose();
+    super.dispose();
   }
 
   Future<void> _initializeFilter() async {
     if (_auth.user != null) {
       LoanFilter savedFilter =
           await Database(uid: _auth.user!.uid).fetchUserFilter();
-      setState(() {
-        currentFilter = savedFilter;
-      });
+      if (mounted) {
+        // Check whether the widget is still in the widget tree
+        setState(() {
+          currentFilter = savedFilter;
+        });
+      }
     }
   }
 
@@ -100,8 +108,9 @@ class _LoanViewState extends State<LoanView>
         title: MouseRegion(
           cursor: SystemMouseCursors.click,
           child: GestureDetector(
-            onTap: () {
+            onTap: () async {
               currentFilter = LoanFilter();
+              await Database(uid: _auth.user!.uid).deleteCurrentFilter();
               setState(() {});
             },
             child: Text('Borrow Breeze'),

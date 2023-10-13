@@ -58,202 +58,254 @@ class _FilterDialogState extends State<FilterDialog> {
     }
   }
 
+  _showCustomDialog(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Create and Apply Filter'),
+            content: SingleChildScrollView(
+              child: Form(
+                key: _formKey,
+                child: Center(
+                  child: Column(
+                    children: [
+                      // filterRows.every((row) => row.type == 'status' || row.type == 'repayDate')
+                      filterRows.every((row) => row.type == 'status')
+                          ? Row(
+                              children: [
+                                Expanded(
+                                  child: DropdownButtonFormField<String>(
+                                    value: sortField,
+                                    items: [
+                                      'repay date',
+                                    ].map((field) {
+                                      return DropdownMenuItem(
+                                        child: Text(field),
+                                        value: field,
+                                      );
+                                    }).toList(),
+                                    onChanged: (value) {
+                                      if (value != null) {
+                                        setState(() {
+                                          sortField = value;
+                                        });
+                                      }
+                                    },
+                                    decoration: InputDecoration(
+                                      labelText: 'Sort by',
+                                      border: OutlineInputBorder(),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 20,
+                                ),
+                                Expanded(
+                                  child: DropdownButtonFormField<String>(
+                                    value: sortAscending == true
+                                        ? 'Ascending'
+                                        : 'Descending',
+                                    items: [
+                                      'Ascending',
+                                      'Descending',
+                                    ].map((field) {
+                                      return DropdownMenuItem(
+                                        child: Text(field),
+                                        value: field,
+                                      );
+                                    }).toList(),
+                                    onChanged: (value) {
+                                      if (value != null) {
+                                        setState(() {
+                                          value == 'Ascending'
+                                              ? sortAscending = true
+                                              : sortAscending = false;
+                                        });
+                                      }
+                                    },
+                                    decoration: InputDecoration(
+                                      border: OutlineInputBorder(),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 40,
+                                ),
+                              ],
+                            )
+                          : Center(
+                              child: Text(
+                                'Sorting only supported for Filter by Status',
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 14.0,
+                                ),
+                              ),
+                            ),
+                      SizedBox(
+                        height: 25,
+                      ),
+                      ...filterRows.map((filterRow) {
+                        return Container(
+                          margin: EdgeInsets.only(top: 10),
+                          child: FilterRowWidget(
+                            key: ValueKey(filterRow),
+                            filterRow: filterRow,
+                            usedFilters: usedFilters,
+                            onTypeUsed: (type) {
+                              setState(() {
+                                if (!usedFilters.contains(type)) {
+                                  usedFilters.add(type);
+                                }
+                              });
+                            },
+                            onDelete: () {
+                              setState(() {
+                                if (filterRow.type != 'status') {
+                                  usedFilters.remove(filterRow.type);
+                                }
+                                filterRows.remove(filterRow);
+                              });
+                            },
+                            onUpdate: (updatedRow) {
+                              setState(() {
+                                int index = filterRows.indexOf(filterRow);
+                                if (index != -1) {
+                                  filterRows[index] = updatedRow;
+                                }
+                              });
+                            },
+                            selectDate: _selectDate,
+                            accountNames: accountNames,
+                            borrowerNames: borrowerNames,
+                            borrowerUsernames: borrowerUsernames,
+                            availableTypes: getAvailableTypes(filterRows),
+                          ),
+                        );
+                      }).toList(),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.add),
+                            onPressed: () {
+                              setState(() {
+                                FilterRow newRow = FilterRow();
+                                if (usedFilters.contains(newRow.type) &&
+                                    newRow.type != 'status') {
+                                  return;
+                                }
+                                filterRows.add(newRow);
+                                if (newRow.type != 'status') {
+                                  usedFilters.add(newRow.type);
+                                }
+                              });
+                            },
+                          ),
+                          ElevatedButton(
+                            child: Text("Apply"),
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                LoanFilter result = LoanFilter();
+                                bool applySort =
+                                    true; // only allow sort on top of filter if sorting by just loan status
+                                filterRows.forEach((row) {
+                                  switch (row.type) {
+                                    case 'status':
+                                      result.status ??= [];
+                                      result.status!.add(row.value);
+                                      break;
+                                    case 'lenderAccount':
+                                      result.lenderAccount = row.value;
+                                      applySort = false;
+                                      break;
+                                    case 'borrowerUsername':
+                                      result.borrowerUsername = row.value;
+                                      applySort = false;
+                                      break;
+                                    case 'borrowerName':
+                                      result.borrowerName = row.value;
+                                      applySort = false;
+                                      break;
+                                    case 'originationDate':
+                                      result.originationDate =
+                                          Timestamp.fromDate(row.value);
+                                      applySort = false;
+                                      break;
+                                    case 'repayDate':
+                                      result.repayDate =
+                                          Timestamp.fromDate(row.value);
+                                      applySort = false;
+                                      break;
+                                  }
+                                });
+                                if (applySort) {
+                                  result.sortOption = SortOption(
+                                      field: sortField,
+                                      ascending: sortAscending);
+                                }
+                                Navigator.pop(context, result);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Create and Apply Filter'),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Center(
-            child: Column(
-              children: [
-                // filterRows.every((row) => row.type == 'status' || row.type == 'repayDate')
-                filterRows.every((row) => row.type == 'status')
-                    ? Row(
-                        children: [
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: sortField,
-                              items: [
-                                'repay date',
-                              ].map((field) {
-                                return DropdownMenuItem(
-                                  child: Text(field),
-                                  value: field,
-                                );
-                              }).toList(),
-                              onChanged: (value) {
-                                if (value != null) {
-                                  setState(() {
-                                    sortField = value;
-                                  });
-                                }
-                              },
-                              decoration: InputDecoration(
-                                labelText: 'Sort by',
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            width: 20,
-                          ),
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: sortAscending == true
-                                  ? 'Ascending'
-                                  : 'Descending',
-                              items: [
-                                'Ascending',
-                                'Descending',
-                              ].map((field) {
-                                return DropdownMenuItem(
-                                  child: Text(field),
-                                  value: field,
-                                );
-                              }).toList(),
-                              onChanged: (value) {
-                                if (value != null) {
-                                  setState(() {
-                                    value == 'Ascending'
-                                        ? sortAscending = true
-                                        : sortAscending = false;
-                                  });
-                                }
-                              },
-                              decoration: InputDecoration(
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            width: 40,
-                          ),
-                        ],
-                      )
-                    : Center(
-                        child: Text(
-                          'Sorting only supported for Filter by Status',
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontSize:
-                                14.0,
-                          ),
-                        ),
-                      ),
-                SizedBox(
-                  height: 25,
-                ),
-                ...filterRows.map((filterRow) {
-                  return Container(
-                    margin: EdgeInsets.only(top: 10),
-                    child: FilterRowWidget(
-                      key: ValueKey(filterRow),
-                      filterRow: filterRow,
-                      usedFilters: usedFilters,
-                      onTypeUsed: (type) {
-                        setState(() {
-                          if (!usedFilters.contains(type)) {
-                            usedFilters.add(type);
-                          }
-                        });
-                      },
-                      onDelete: () {
-                        setState(() {
-                          if (filterRow.type != 'status') {
-                            usedFilters.remove(filterRow.type);
-                          }
-                          filterRows.remove(filterRow);
-                        });
-                      },
-                      onUpdate: (updatedRow) {
-                        setState(() {
-                          int index = filterRows.indexOf(filterRow);
-                          if (index != -1) {
-                            filterRows[index] = updatedRow;
-                          }
-                        });
-                      },
-                      selectDate: _selectDate,
-                      accountNames: accountNames,
-                      borrowerNames: borrowerNames,
-                      borrowerUsernames: borrowerUsernames,
-                      availableTypes: getAvailableTypes(filterRows),
-                    ),
-                  );
-                }).toList(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.add),
-                      onPressed: () {
-                        setState(() {
-                          FilterRow newRow = FilterRow();
-                          if (usedFilters.contains(newRow.type) &&
-                              newRow.type != 'status') {
-                            return;
-                          }
-                          filterRows.add(newRow);
-                          if (newRow.type != 'status') {
-                            usedFilters.add(newRow.type);
-                          }
-                        });
-                      },
-                    ),
-                    ElevatedButton(
-                      child: Text("Apply"),
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          LoanFilter result = LoanFilter();
-                          bool applySort =
-                              true; // only allow sort on top of filter if sorting by just loan status
-                          filterRows.forEach((row) {
-                            switch (row.type) {
-                              case 'status':
-                                result.status ??= [];
-                                result.status!.add(row.value);
-                                break;
-                              case 'lenderAccount':
-                                result.lenderAccount = row.value;
-                                applySort = false;
-                                break;
-                              case 'borrowerUsername':
-                                result.borrowerUsername = row.value;
-                                applySort = false;
-                                break;
-                              case 'borrowerName':
-                                result.borrowerName = row.value;
-                                applySort = false;
-                                break;
-                              case 'originationDate':
-                                result.originationDate =
-                                    Timestamp.fromDate(row.value);
-                                applySort = false;
-                                break;
-                              case 'repayDate':
-                                result.repayDate =
-                                    Timestamp.fromDate(row.value);
-                                applySort = false;
-                                break;
-                            }
-                          });
-                          if (applySort) {
-                            result.sortOption = SortOption(
-                                field: sortField, ascending: sortAscending);
-                          }
-                          Navigator.pop(context, result);
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ],
+      actions: [
+        TextButton(
+          child: Text(
+            'Custom',
+            style: TextStyle(
+              color: Colors.blue,
+              decoration: TextDecoration.underline,
             ),
           ),
+          onPressed: () {
+            Navigator.of(context).pop();
+            _showCustomDialog(context);
+          },
         ),
-      ),
+      ],
+      title: Text('Create and Apply Filter'),
+      content: SingleChildScrollView(
+          child: Center(
+        child: DropdownButtonFormField(
+          items: [
+            'ongoing due today',
+            'ongoing due today + overdue',
+            'ongoing due this week',
+            'ongoing due this week + overdue'
+          ].map((preset) {
+            return DropdownMenuItem(
+              child: Text(preset),
+              value: preset,
+            );
+          }).toList(),
+          onChanged: (value) {
+            LoanFilter result = LoanFilter();
+            result.specialInstructions = value;
+            result.sortOption =
+                SortOption(field: 'repay date', ascending: true);
+            Navigator.pop(context, result);
+          },
+          decoration: InputDecoration(
+            labelText: 'Preset Filters',
+            border: OutlineInputBorder(),
+          ),
+        ),
+      )),
     );
   }
 

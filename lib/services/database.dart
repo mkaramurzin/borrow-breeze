@@ -63,45 +63,69 @@ class Database {
     Query loansQuery = loansCollection;
 
     if (filter != null) {
-      if (filter?.status != null && filter.status!.isNotEmpty) {
-        loansQuery = loansQuery.where('status', whereIn: filter!.status);
-      }
+      // special preset filters
+      if (filter.specialInstructions == 'ongoing due today') {
+      } else if (filter.specialInstructions ==
+          'ongoing due today and overdue') {
+      } else if (filter.specialInstructions == 'ongoing due this week') {
+        DateTime now = DateTime.now();
+        DateTime endOfWeek = now.add(Duration(days: 7));
 
-      if (filter?.borrowerUsername != null) {
-        loansQuery = loansQuery.where('borrower username',
-            isEqualTo: filter.borrowerUsername);
-      }
+        DateTime startOfCurrentWeek =
+            DateTime(now.year, now.month, now.day, 0, 0, 0);
+        DateTime endOfCurrentWeek = DateTime(
+            endOfWeek.year, endOfWeek.month, endOfWeek.day, 23, 59, 59);
 
-      if (filter?.lenderAccount != null) {
-        loansQuery =
-            loansQuery.where('lender account', isEqualTo: filter.lenderAccount);
-      }
+        // Add condition for ongoing loans
+        loansQuery = loansQuery.where('status', isEqualTo: 'ongoing');
 
-      if (filter?.borrowerName != null) {
-        loansQuery =
-            loansQuery.where('borrower name', isEqualTo: filter.borrowerName);
-      }
-
-      if (filter?.originationDate != null) {
-        DateTime date = filter.originationDate!.toDate();
-        Timestamp startOfDay = Timestamp.fromDate(
-            DateTime(date.year, date.month, date.day, 0, 0, 0));
-        Timestamp endOfDay = Timestamp.fromDate(
-            DateTime(date.year, date.month, date.day, 23, 59, 59));
+        // Add condition for current week
         loansQuery = loansQuery
-            .where('origination date', isGreaterThanOrEqualTo: startOfDay)
-            .where('origination date', isLessThanOrEqualTo: endOfDay);
-      }
+            .where('repay date', isGreaterThanOrEqualTo: startOfCurrentWeek)
+            .where('repay date', isLessThanOrEqualTo: endOfCurrentWeek);
+      } else if (filter.specialInstructions ==
+          'ongoing due this week and overdue') {
+      } else {
+        if (filter.status != null && filter.status!.isNotEmpty) {
+          loansQuery = loansQuery.where('status', whereIn: filter.status);
+        }
 
-      if (filter?.repayDate != null) {
-        DateTime date = filter.repayDate!.toDate();
-        Timestamp startOfDay = Timestamp.fromDate(
-            DateTime(date.year, date.month, date.day, 0, 0, 0));
-        Timestamp endOfDay = Timestamp.fromDate(
-            DateTime(date.year, date.month, date.day, 23, 59, 59));
-        loansQuery = loansQuery
-            .where('repay date', isGreaterThanOrEqualTo: startOfDay)
-            .where('repay date', isLessThanOrEqualTo: endOfDay);
+        if (filter?.borrowerUsername != null) {
+          loansQuery = loansQuery.where('borrower username',
+              isEqualTo: filter.borrowerUsername);
+        }
+
+        if (filter?.lenderAccount != null) {
+          loansQuery = loansQuery.where('lender account',
+              isEqualTo: filter.lenderAccount);
+        }
+
+        if (filter?.borrowerName != null) {
+          loansQuery =
+              loansQuery.where('borrower name', isEqualTo: filter.borrowerName);
+        }
+
+        if (filter?.originationDate != null) {
+          DateTime date = filter.originationDate!.toDate();
+          Timestamp startOfDay = Timestamp.fromDate(
+              DateTime(date.year, date.month, date.day, 0, 0, 0));
+          Timestamp endOfDay = Timestamp.fromDate(
+              DateTime(date.year, date.month, date.day, 23, 59, 59));
+          loansQuery = loansQuery
+              .where('origination date', isGreaterThanOrEqualTo: startOfDay)
+              .where('origination date', isLessThanOrEqualTo: endOfDay);
+        }
+
+        if (filter?.repayDate != null) {
+          DateTime date = filter.repayDate!.toDate();
+          Timestamp startOfDay = Timestamp.fromDate(
+              DateTime(date.year, date.month, date.day, 0, 0, 0));
+          Timestamp endOfDay = Timestamp.fromDate(
+              DateTime(date.year, date.month, date.day, 23, 59, 59));
+          loansQuery = loansQuery
+              .where('repay date', isGreaterThanOrEqualTo: startOfDay)
+              .where('repay date', isLessThanOrEqualTo: endOfDay);
+        }
       }
     }
 
@@ -167,7 +191,7 @@ class Database {
         .collection('Users')
         .doc(uid)
         .collection('Filters')
-        .doc(filter.docID ?? 'defaultFilter')
+        .doc(filter.docID ?? 'currentFilter')
         .set({
       'filterName': filter.filterName,
       'status': filter.status,
@@ -178,7 +202,18 @@ class Database {
       'repayDate': filter.repayDate,
       'sortOptionField': filter.sortOption?.field,
       'sortOptionAscending': filter.sortOption?.ascending,
+      'specialInstructions': filter.specialInstructions,
     });
+  }
+
+  // delete
+  Future<void> deleteCurrentFilter() async {
+    await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(uid)
+        .collection('Filters')
+        .doc('currentFilter')
+        .delete();
   }
 
   // Fetch Filter
@@ -187,7 +222,7 @@ class Database {
         .collection('Users')
         .doc(uid)
         .collection('Filters')
-        .doc('defaultFilter')
+        .doc('currentFilter')
         .get();
     if (snapshot.exists) {
       Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
@@ -204,9 +239,10 @@ class Database {
           field: data['sortOptionField'] ?? '',
           ascending: data['sortOptionAscending'] ?? true,
         ),
+        specialInstructions: data['specialInstructions'],
       );
     } else {
-      return LoanFilter(); // Return default filter if not set
+      return LoanFilter(sortOption: SortOption(field: 'repay date', ascending: true)); // Return default filter if not set
     }
   }
 
@@ -253,6 +289,17 @@ class Database {
     return uniqueUsernames.toList();
   }
 
+  Future<List<LoanFilter>> fetchPresetFilters() async {
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('Admin')
+        .doc('karamwebber')
+        .collection('Filters')
+        .get();
+
+    return snapshot.docs.map((doc) {
+      return LoanFilter();
+    }).toList();
+  }
 
   // Business logic related section below
 
