@@ -65,6 +65,18 @@ class Database {
     if (filter != null) {
       // special preset filters
       if (filter.specialInstructions == 'ongoing due today') {
+        DateTime now = DateTime.now();
+        DateTime startOfToday = DateTime(now.year, now.month, now.day, 0, 0, 0);
+        DateTime endOfToday =
+            DateTime(now.year, now.month, now.day, 23, 59, 59);
+
+        // Add condition for ongoing loans
+        loansQuery = loansQuery.where('status', isEqualTo: 'ongoing');
+
+        // Add condition for due today
+        loansQuery = loansQuery
+            .where('repay date', isGreaterThanOrEqualTo: startOfToday)
+            .where('repay date', isLessThanOrEqualTo: endOfToday);
       } else if (filter.specialInstructions ==
           'ongoing due today and overdue') {
       } else if (filter.specialInstructions == 'ongoing due this week') {
@@ -242,7 +254,7 @@ class Database {
         specialInstructions: data['specialInstructions'],
       );
     } else {
-      return LoanFilter(sortOption: SortOption(field: 'repay date', ascending: true)); // Return default filter if not set
+      return LoanFilter(); // Return default filter if not set
     }
   }
 

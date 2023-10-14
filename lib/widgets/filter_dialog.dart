@@ -283,6 +283,7 @@ class _FilterDialogState extends State<FilterDialog> {
           child: Center(
         child: DropdownButtonFormField(
           items: [
+            'all loans (no filter)',
             'ongoing due today',
             'ongoing due today + overdue',
             'ongoing due this week',
@@ -295,9 +296,9 @@ class _FilterDialogState extends State<FilterDialog> {
           }).toList(),
           onChanged: (value) {
             LoanFilter result = LoanFilter();
-            result.specialInstructions = value;
-            result.sortOption =
-                SortOption(field: 'repay date', ascending: true);
+            if(value != "all loans (no filter)") {
+              result.specialInstructions = value;
+            }
             Navigator.pop(context, result);
           },
           decoration: InputDecoration(
