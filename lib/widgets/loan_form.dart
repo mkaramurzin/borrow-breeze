@@ -93,6 +93,13 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
     return "${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}-${date.year}";
   }
 
+  String formatSubmitDate(DateTime date) {
+    String period = date.hour >= 12 ? "pm" : "am";
+    int hour12Format =
+        date.hour > 12 ? date.hour - 12 : (date.hour == 0 ? 12 : date.hour);
+    return "${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}-${date.year}, ${hour12Format}$period";
+  }
+
   bool containsItem(
       List<Map<String, dynamic>> list, Map<String, dynamic> item) {
     for (var listItem in list) {
@@ -134,7 +141,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
           if (status != 'extended') {
             status = 'partial';
           }
-          Database(uid: _auth.user!.uid)
+          await Database(uid: _auth.user!.uid)
               .handlePartialPayment(widget.loan!, enteredAmount);
           amountRepaid += enteredAmount;
           onSubmit();
@@ -145,8 +152,8 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
     ElevatedButton defaultBtn = ElevatedButton(
       style: ElevatedButton.styleFrom(
           backgroundColor: Color.fromARGB(255, 231, 15, 0)),
-      onPressed: () {
-        Database(uid: _auth.user!.uid).handleDefaultedLoan(widget.loan!);
+      onPressed: () async {
+        await Database(uid: _auth.user!.uid).handleDefaultedLoan(widget.loan!);
         status = 'defaulted';
         onSubmit();
       },
@@ -176,6 +183,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
     switch (widget.loan!.status) {
       case 'ongoing':
       case 'partial':
+      case 'overdue':
       case 'extended':
         return [paidBtn, partialBtn, defaultBtn];
       case 'defaulted':
@@ -592,7 +600,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
   Future<void> onSubmit() async {
     if (widget.loan != null) {
       List<String> changes = [];
-      changes.add(formatDate(DateTime.now()));
+      changes.add(formatSubmitDate(DateTime.now()));
       if (widget.loan!.status != status) {
         changes.add('STATUS    ${widget.loan!.status} -> $status');
         widget.loan!.status = status;
@@ -637,12 +645,14 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
         widget.loan!.originationDate = Timestamp.fromDate(originationDate);
       }
       if (widget.loan!.repayDate != Timestamp.fromDate(repayDate)) {
-        if (widget.loan!.status != 'defaulted' &&
-            repayDate.isAfter(widget.loan!.repayDate.toDate())) {
-          widget.loan!.status = 'extended';
-        }
         changes.add(
             'REPAY DATE    ${formatDate(widget.loan!.repayDate.toDate())} -> ${formatDate(repayDate)}');
+        if (widget.loan!.status != 'defaulted' &&
+            repayDate.isAfter(widget.loan!.repayDate.toDate())) {
+          status = 'extended';
+          changes.add('STATUS    ${widget.loan!.status} -> $status');
+          widget.loan!.status = status;
+        }
         widget.loan!.repayDate = Timestamp.fromDate(repayDate);
       }
       if (widget.loan!.requestLink != loanRequestLink) {
@@ -687,7 +697,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
           notes: notes,
           verificationItems: verificationItems,
           changeLog:
-              '${DateTime.now()}\nLoan Item Created\nLoan Amount: $principalAmount\nRepay Amount: $repayAmount\nRepay Date: ${formatDate(repayDate)}\n\n');
+              '${formatSubmitDate(DateTime.now())}\nLoan Item Created\nLoan Amount: $principalAmount\nRepay Amount: $repayAmount\nRepay Date: ${formatDate(repayDate)}\n\n');
       await Database(uid: _auth.user!.uid).addLoan(newLoan);
     }
     widget.onFormSubmit();
