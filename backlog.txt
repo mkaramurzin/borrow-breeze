@@ -122,6 +122,7 @@ done        j. Total interest
     - Miscellaneous Credit & Debit (Expenses) logging such as "Azure fee"
     - Color key
     - Distribution tab
+    - Excel export
 
 Usability study 1
 Video recording available on screencastify

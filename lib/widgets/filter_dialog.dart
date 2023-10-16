@@ -285,9 +285,9 @@ class _FilterDialogState extends State<FilterDialog> {
           items: [
             'all loans (no filter)',
             'ongoing due today',
-            'ongoing due today + overdue',
+            'ongoing due today + any overdue',
             'ongoing due this week',
-            'ongoing due this week + overdue'
+            'ongoing due this week + any overdue'
           ].map((preset) {
             return DropdownMenuItem(
               child: Text(preset),

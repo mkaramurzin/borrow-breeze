@@ -78,7 +78,61 @@ class Database {
             .where('repay date', isGreaterThanOrEqualTo: startOfToday)
             .where('repay date', isLessThanOrEqualTo: endOfToday);
       } else if (filter.specialInstructions ==
-          'ongoing due today and overdue') {
+          'ongoing due today + any overdue') {
+        DateTime now = DateTime.now();
+        DateTime startOfToday = DateTime(now.year, now.month, now.day, 0, 0, 0);
+        DateTime endOfToday =
+            DateTime(now.year, now.month, now.day, 23, 59, 59);
+
+        // Query for ongoing loans due today
+        Query ongoingLoansDueTodayQuery = loansQuery
+            .where('status', isEqualTo: 'ongoing')
+            .where('repay date', isGreaterThanOrEqualTo: startOfToday)
+            .where('repay date', isLessThanOrEqualTo: endOfToday);
+
+        // Query for overdue loans
+        Query overdueLoansQuery =
+            loansQuery.where('status', isEqualTo: 'overdue');
+
+        // Get results for both queries
+        QuerySnapshot ongoingSnapshot = await ongoingLoansDueTodayQuery.get();
+        QuerySnapshot overdueSnapshot = await overdueLoansQuery.get();
+
+        // Combine results
+        List<QueryDocumentSnapshot> combinedDocs = [];
+        combinedDocs.addAll(overdueSnapshot.docs);
+        combinedDocs.addAll(ongoingSnapshot.docs);
+
+        if (filter.sortOption != null) {
+          // Apply the sort with Firestore
+          loansQuery = loansQuery.orderBy(filter.sortOption!.field,
+              descending: !filter.sortOption!.ascending);
+        }
+
+        return combinedDocs.map((doc) {
+          return Loan(
+              docID: doc.id,
+              status: doc['status'] as String,
+              lenderAccount: doc['lender account'] as String,
+              financialPlatform: doc['financial platform'] as String,
+              borrowerUsername: doc['borrower username'] as String,
+              borrowerName: doc['borrower name'] as String,
+              principal: doc['amount'] as double,
+              repayAmount: doc['repay amount'] as double,
+              interest: doc['interest'] as double,
+              amountRepaid: doc['amount repaid'] as double,
+              roi: doc['roi'] as double,
+              originationDate: doc['origination date'] as Timestamp,
+              repayDate: doc['repay date'] as Timestamp,
+              duration: doc['duration'] as int,
+              requestLink: doc['request link'] as String,
+              notes: doc['notes'] as String,
+              verificationItems: (doc['verification items'] as List)
+                  .map((item) => item as Map<String, dynamic>)
+                  .toList(),
+              reminders: doc['reminders'] as int,
+              changeLog: doc['changelog'] as String);
+        }).toList();
       } else if (filter.specialInstructions == 'ongoing due this week') {
         DateTime now = DateTime.now();
         DateTime endOfWeek = now.add(Duration(days: 7));
@@ -96,7 +150,64 @@ class Database {
             .where('repay date', isGreaterThanOrEqualTo: startOfCurrentWeek)
             .where('repay date', isLessThanOrEqualTo: endOfCurrentWeek);
       } else if (filter.specialInstructions ==
-          'ongoing due this week and overdue') {
+          'ongoing due this week + any overdue') {
+        DateTime now = DateTime.now();
+        DateTime endOfWeek = now.add(Duration(days: 7));
+
+        DateTime startOfCurrentWeek =
+            DateTime(now.year, now.month, now.day, 0, 0, 0);
+        DateTime endOfCurrentWeek = DateTime(
+            endOfWeek.year, endOfWeek.month, endOfWeek.day, 23, 59, 59);
+
+        // Query for ongoing loans due today
+        Query ongoingLoansDueTodayQuery = loansQuery
+            .where('status', isEqualTo: 'ongoing')
+            .where('repay date', isGreaterThanOrEqualTo: startOfCurrentWeek)
+            .where('repay date', isLessThanOrEqualTo: endOfCurrentWeek);
+
+        // Query for overdue loans
+        Query overdueLoansQuery =
+            loansQuery.where('status', isEqualTo: 'overdue');
+
+        // Get results for both queries
+        QuerySnapshot ongoingSnapshot = await ongoingLoansDueTodayQuery.get();
+        QuerySnapshot overdueSnapshot = await overdueLoansQuery.get();
+
+        // Combine results
+        List<QueryDocumentSnapshot> combinedDocs = [];
+        combinedDocs.addAll(overdueSnapshot.docs);
+        combinedDocs.addAll(ongoingSnapshot.docs);
+
+        if (filter.sortOption != null) {
+          // Apply the sort with Firestore
+          loansQuery = loansQuery.orderBy(filter.sortOption!.field,
+              descending: !filter.sortOption!.ascending);
+        }
+
+        return combinedDocs.map((doc) {
+          return Loan(
+              docID: doc.id,
+              status: doc['status'] as String,
+              lenderAccount: doc['lender account'] as String,
+              financialPlatform: doc['financial platform'] as String,
+              borrowerUsername: doc['borrower username'] as String,
+              borrowerName: doc['borrower name'] as String,
+              principal: doc['amount'] as double,
+              repayAmount: doc['repay amount'] as double,
+              interest: doc['interest'] as double,
+              amountRepaid: doc['amount repaid'] as double,
+              roi: doc['roi'] as double,
+              originationDate: doc['origination date'] as Timestamp,
+              repayDate: doc['repay date'] as Timestamp,
+              duration: doc['duration'] as int,
+              requestLink: doc['request link'] as String,
+              notes: doc['notes'] as String,
+              verificationItems: (doc['verification items'] as List)
+                  .map((item) => item as Map<String, dynamic>)
+                  .toList(),
+              reminders: doc['reminders'] as int,
+              changeLog: doc['changelog'] as String);
+        }).toList();
       } else {
         if (filter.status != null && filter.status!.isNotEmpty) {
           loansQuery = loansQuery.where('status', whereIn: filter.status);
