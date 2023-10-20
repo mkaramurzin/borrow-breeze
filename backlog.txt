@@ -123,6 +123,7 @@ done        j. Total interest
     - Color key
     - Distribution tab
     - Excel export
+    - file upload for verification items
 
 Usability study 1
 Video recording available on screencastify

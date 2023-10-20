@@ -1,14 +1,15 @@
 import 'package:borrowbreeze/screens/metrics_view.dart';
+import 'package:borrowbreeze/services/excel_export.dart';
 import 'package:borrowbreeze/services/loan_logic.dart';
 import 'package:borrowbreeze/widgets/loan_item.dart';
 import 'package:borrowbreeze/services/database.dart';
 import 'package:borrowbreeze/services/auth.dart';
 import 'package:borrowbreeze/models/loan.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:borrowbreeze/models/filter.dart';
 import 'package:borrowbreeze/widgets/filter_dialog.dart';
 import '../widgets/loan_form.dart';
+import 'package:borrowbreeze/services/excel_export.dart';
 
 class LoanView extends StatefulWidget {
   const LoanView({Key? key}) : super(key: key);
@@ -92,6 +93,10 @@ class _LoanViewState extends State<LoanView>
         break;
 
       case 2:
+        ExcelExportService().exportLoansToExcel(loanList);
+        break;
+
+      case 3:
         await _auth.signOut();
         Navigator.pushReplacementNamed(context, '/');
         break;
@@ -161,9 +166,13 @@ class _LoanViewState extends State<LoanView>
                         value: 1,
                         child: Text('Apply Filter'),
                       ),
-                      PopupMenuDivider(),
                       PopupMenuItem(
                         value: 2,
+                        child: Text('Excel Export'),
+                      ),
+                      PopupMenuDivider(),
+                      PopupMenuItem(
+                        value: 3,
                         child: Text("Sign Out"),
                       ),
                     ]),
