@@ -43,17 +43,47 @@ class Database {
     return downloadURL;
   }
 
+  Future<String> uploadImageAndGetUrlWeb(html.File imageFile) async {
+    // Convert the html.File to a Blob, then to a Uint8List
+    final reader = html.FileReader();
+    reader.readAsArrayBuffer(imageFile);
+    await reader.onLoad.first;
+
+    final data = (reader.result as Uint8List).buffer;
+
+    // Path for Firebase
+    String path = 'files/${DateTime.now()}.png';
+
+    // Reference to Firebase storage with the path
+    final Reference storageRef = FirebaseStorage.instance.ref().child(path);
+
+    // Uploading the Uint8List data to Firebase Storage using putData
+    UploadTask uploadTask = storageRef.putData(data.asUint8List());
+
+    // Waiting for the upload to complete
+    await uploadTask.whenComplete(() {});
+
+    // Getting the download URL
+    final String downloadURL = await storageRef.getDownloadURL();
+
+    return downloadURL;
+  }
+
   Future deleteImage(String downloadURL) async {
-    final Reference storageRef = FirebaseStorage.instance.refFromURL(downloadURL);
+    final Reference storageRef =
+        FirebaseStorage.instance.refFromURL(downloadURL);
     await storageRef.delete();
   }
 
   Future<void> addLoan(Loan loan) async {
     // Upload images and replace File objects with URLs
     for (int i = 0; i < loan.verificationItems.length; i++) {
-      if (loan.verificationItems[i]['url'] is XFile) {
-        String imageUrl =
-            await uploadImageAndGetUrl(loan.verificationItems[i]['url']);
+      var url = loan.verificationItems[i]['url'];
+      if (url is XFile) {
+        String imageUrl = await uploadImageAndGetUrl(url);
+        loan.verificationItems[i]['url'] = imageUrl;
+      } else if (url is html.File) {
+        String imageUrl = await uploadImageAndGetUrlWeb(url);
         loan.verificationItems[i]['url'] = imageUrl;
       }
     }

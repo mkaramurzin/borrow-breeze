@@ -1,8 +1,11 @@
+import 'dart:html' as html;
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:borrowbreeze/widgets/payment_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:borrowbreeze/models/loan.dart';
 import 'package:borrowbreeze/services/database.dart';
@@ -553,13 +556,33 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                               onPressed: item['url'] != ''
                                   ? null
                                   : () async {
-                                      final XFile? pickedFile =
-                                          await ImagePicker().pickImage(
-                                              source: ImageSource.gallery);
-                                      if (pickedFile != null) {
-                                        setState(() {
-                                          item['url'] = XFile(pickedFile.path);
+                                      if (kIsWeb) {
+                                        // Web-specific image picking logic
+                                        final html.FileUploadInputElement
+                                            input =
+                                            html.FileUploadInputElement()
+                                              ..accept = 'image/*';
+                                        input.click();
+
+                                        input.onChange.listen((event) {
+                                          final file = input.files!.first;
+                                          // Instead of uploading right away, just store the html.File object
+                                          setState(() {
+                                            item['url'] =
+                                                file; // Now item['url'] holds an html.File object
+                                          });
                                         });
+                                      } else {
+                                        // Mobile-specific image picking logic
+                                        final XFile? pickedFile =
+                                            await ImagePicker().pickImage(
+                                                source: ImageSource.gallery);
+                                        if (pickedFile != null) {
+                                          setState(() {
+                                            item['url'] =
+                                                pickedFile; // Now item['url'] holds an XFile object
+                                          });
+                                        }
                                       }
                                     },
                             ),
