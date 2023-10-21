@@ -1,6 +1,11 @@
+import 'dart:io';
+import 'dart:html' as html;
+import 'dart:typed_data';
 import 'package:borrowbreeze/models/filter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:borrowbreeze/models/loan.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 
 class Database {
   final String uid;
@@ -16,8 +21,43 @@ class Database {
         .add({'name': 'Independent'});
   }
 
+  Future<String> uploadImageAndGetUrl(XFile imageFile) async {
+    // Convert image to Uint8List
+    Uint8List uint8list = await imageFile.readAsBytes();
+
+    // Path for Firebase
+    String path = 'files/${DateTime.now()}.png';
+
+    // Reference to Firebase storage with the path
+    final Reference storageRef = FirebaseStorage.instance.ref().child(path);
+
+    // Uploading the Uint8List data to Firebase Storage using putData
+    UploadTask uploadTask = storageRef.putData(uint8list);
+
+    // Waiting for the upload to complete
+    await uploadTask.whenComplete(() {});
+
+    // Getting the download URL
+    final String downloadURL = await storageRef.getDownloadURL();
+
+    return downloadURL;
+  }
+
+  Future deleteImage(String downloadURL) async {
+    final Reference storageRef = FirebaseStorage.instance.refFromURL(downloadURL);
+    await storageRef.delete();
+  }
+
   Future<void> addLoan(Loan loan) async {
-    // Get a new document reference without actually creating it.
+    // Upload images and replace File objects with URLs
+    for (int i = 0; i < loan.verificationItems.length; i++) {
+      if (loan.verificationItems[i]['url'] is XFile) {
+        String imageUrl =
+            await uploadImageAndGetUrl(loan.verificationItems[i]['url']);
+        loan.verificationItems[i]['url'] = imageUrl;
+      }
+    }
+
     final DocumentReference docRef =
         userCollection.doc(uid).collection('Loans').doc();
 

@@ -12,7 +12,8 @@ void main() async {
           apiKey: "AIzaSyDWk_LXD-hrOpo0hnyhhKaj7Xuw91sWkGA",
           appId: "1:36578099640:web:19883730ede1eef1730f4d",
           messagingSenderId: "G-YGFGMSSQPY",
-          projectId: "borrowbreeze"));
+          projectId: "borrowbreeze",
+          storageBucket: "gs://borrowbreeze.appspot.com"));
   runApp(MyApp());
 }
 

@@ -124,6 +124,7 @@ done        j. Total interest
     - Distribution tab
     - Excel export
     - file upload for verification items
+    - change origination and repay date pickers to a range of dates
 
 Usability study 1
 Video recording available on screencastify

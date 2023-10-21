@@ -1,11 +1,15 @@
+import 'dart:io';
+
 import 'package:borrowbreeze/widgets/payment_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:borrowbreeze/models/loan.dart';
 import 'package:borrowbreeze/services/database.dart';
 import 'package:borrowbreeze/services/auth.dart';
 import 'package:borrowbreeze/services/loan_logic.dart';
 import 'package:borrowbreeze/widgets/metrics_row.dart';
+import 'package:image_picker/image_picker.dart';
 
 class LoanFormDialog extends StatefulWidget {
   final Loan? loan;
@@ -40,7 +44,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
   int duration = 1;
   String loanRequestLink = '';
   String notes = '';
-  List<Map<String, String>> verificationItems = [];
+  List<Map<String, dynamic>> verificationItems = [];
 
   @override
   void initState() {
@@ -69,7 +73,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
       verificationItems = (widget.loan!.verificationItems as List)
           .map((item) => {
                 'label': item['label'] as String,
-                'url': item['url'] as String,
+                'url': item['url'],
               })
           .toList();
     }
@@ -521,9 +525,9 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                   ),
                   ...verificationItems.asMap().entries.map((entry) {
                     int idx = entry.key;
-                    Map<String, String> item = entry.value;
+                    Map<String, dynamic> item = entry.value;
+
                     return Container(
-                      margin: EdgeInsets.symmetric(vertical: 5),
                       child: Row(
                         children: [
                           Expanded(
@@ -542,28 +546,31 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                           ),
                           SizedBox(width: 10),
                           Expanded(
-                            child: TextFormField(
-                              initialValue: item['url'],
-                              decoration: InputDecoration(
-                                labelText: 'URL',
-                                border: OutlineInputBorder(),
-                              ),
-                              onChanged: (value) {
-                                setState(() {
-                                  verificationItems[idx]['url'] = value;
-                                });
-                              },
+                            child: IconButton(
+                              icon: item['url'] != ''
+                                  ? Icon(Icons.check)
+                                  : Icon(Icons.upload),
+                              onPressed: item['url'] != ''
+                                  ? null
+                                  : () async {
+                                      final XFile? pickedFile =
+                                          await ImagePicker().pickImage(
+                                              source: ImageSource.gallery);
+                                      if (pickedFile != null) {
+                                        setState(() {
+                                          item['url'] = XFile(pickedFile.path);
+                                        });
+                                      }
+                                    },
                             ),
                           ),
-                          Visibility(
-                            child: IconButton(
-                              icon: Icon(Icons.delete),
-                              onPressed: () {
-                                setState(() {
-                                  verificationItems.removeAt(idx);
-                                });
-                              },
-                            ),
+                          IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () {
+                              setState(() {
+                                verificationItems.removeAt(idx);
+                              });
+                            },
                           ),
                         ],
                       ),
@@ -662,6 +669,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
       }
       for (var item in widget.loan!.verificationItems) {
         if (!containsItem(verificationItems, item)) {
+          await Database(uid: _auth.user!.uid).deleteImage(item['url']);
           changes.add(
               'VERIFICATION ITEM REMOVED:\nLabel: ${item['label']} URL: ${item['url']}');
         }
