@@ -217,6 +217,30 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
       dialogWidth = screenWidth * 0.5;
     }
     return AlertDialog(
+      actions: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            TextButton(
+              child: Text('Cancel',
+                  style: TextStyle(
+                    color: Colors.red,
+                  )),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            ElevatedButton(
+              child: Text('Submit'),
+              onPressed: () async {
+                if (_formKey.currentState!.validate()) {
+                  onSubmit();
+                }
+              },
+            ),
+          ],
+        ),
+      ],
       title: widget.loan == null
           ? Center(child: Text('Add Loan'))
           : Center(
@@ -523,16 +547,28 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                       border: OutlineInputBorder(),
                     ),
                   ),
-                  SizedBox(
-                    height: 20,
+                  Container(
+                    margin: EdgeInsets.symmetric(vertical: 20),
+                    child: Text(
+                      "Verification Items:"
+                    ),
                   ),
                   ...verificationItems.asMap().entries.map((entry) {
                     int idx = entry.key;
                     Map<String, dynamic> item = entry.value;
 
                     return Container(
+                      margin: EdgeInsets.only(bottom: 10),
                       child: Row(
                         children: [
+                          IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () {
+                              setState(() {
+                                verificationItems.removeAt(idx);
+                              });
+                            },
+                          ),
                           Expanded(
                             child: TextFormField(
                               initialValue: item['label'],
@@ -587,36 +623,20 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                                     },
                             ),
                           ),
-                          IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () {
-                              setState(() {
-                                verificationItems.removeAt(idx);
-                              });
-                            },
-                          ),
                         ],
                       ),
                     );
                   }).toList(),
-                  Container(
-                    padding: EdgeInsets.symmetric(vertical: 20),
-                    child: ElevatedButton(
+                  Tooltip(
+                    message: 'Add Verification Item',
+                    child: IconButton(
+                      icon: Icon(Icons.add),
                       onPressed: () {
                         setState(() {
                           verificationItems.add({'label': '', 'url': ''});
                         });
                       },
-                      child: Text("Add Verification Item"),
                     ),
-                  ),
-                  ElevatedButton(
-                    child: Text('Submit'),
-                    onPressed: () async {
-                      if (_formKey.currentState!.validate()) {
-                        onSubmit();
-                      }
-                    },
                   ),
                 ],
               ),
