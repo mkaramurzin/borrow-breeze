@@ -14,6 +14,7 @@ class FilterDialog extends StatefulWidget {
 }
 
 class _FilterDialogState extends State<FilterDialog> {
+  bool _showMainDialog = false;
   List<FilterRow> filterRows = [FilterRow()];
   List<String> usedFilters = [];
   List<String> accountNames = [];
@@ -44,6 +45,12 @@ class _FilterDialogState extends State<FilterDialog> {
     });
   }
 
+  void _toggleDialog() {
+    setState(() {
+      _showMainDialog = !_showMainDialog;
+    });
+  }
+
   Future<void> _selectDate(BuildContext context, DateTime? initialDate,
       Function(DateTime?) onDateSelected) async {
     DateTime? selectedDate = await showDatePicker(
@@ -58,11 +65,10 @@ class _FilterDialogState extends State<FilterDialog> {
     }
   }
 
-  _showCustomDialog(BuildContext context) {
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
+  @override
+  Widget build(BuildContext context) {
+    return _showMainDialog
+        ? AlertDialog(
             title: Text('Create and Apply Filter'),
             content: SingleChildScrollView(
               child: Form(
@@ -256,58 +262,51 @@ class _FilterDialogState extends State<FilterDialog> {
                 ),
               ),
             ),
+          )
+        : AlertDialog(
+            actions: [
+              TextButton(
+                child: Text(
+                  'Custom',
+                  style: TextStyle(
+                    color: Colors.blue,
+                  ),
+                ),
+                onPressed: () {
+                  _toggleDialog();
+                },
+              ),
+            ],
+            title: Text('Create and Apply Filter'),
+            content: SingleChildScrollView(
+                child: Center(
+              child: DropdownButtonFormField(
+                items: [
+                  'all loans (no filter)',
+                  'ongoing due today',
+                  'ongoing due today + any overdue',
+                  'ongoing due this week',
+                  'ongoing due this week + any overdue'
+                ].map((preset) {
+                  return DropdownMenuItem(
+                    child: Text(preset),
+                    value: preset,
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  LoanFilter result = LoanFilter();
+                  if (value != "all loans (no filter)") {
+                    result.specialInstructions = value;
+                  }
+                  Navigator.pop(context, result);
+                },
+                decoration: InputDecoration(
+                  labelText: 'Preset Filters',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            )),
           );
-        });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      actions: [
-        TextButton(
-          child: Text(
-            'Custom',
-            style: TextStyle(
-              color: Colors.blue,
-              decoration: TextDecoration.underline,
-            ),
-          ),
-          onPressed: () {
-            Navigator.of(context).pop();
-            _showCustomDialog(context);
-          },
-        ),
-      ],
-      title: Text('Create and Apply Filter'),
-      content: SingleChildScrollView(
-          child: Center(
-        child: DropdownButtonFormField(
-          items: [
-            'all loans (no filter)',
-            'ongoing due today',
-            'ongoing due today + any overdue',
-            'ongoing due this week',
-            'ongoing due this week + any overdue'
-          ].map((preset) {
-            return DropdownMenuItem(
-              child: Text(preset),
-              value: preset,
-            );
-          }).toList(),
-          onChanged: (value) {
-            LoanFilter result = LoanFilter();
-            if(value != "all loans (no filter)") {
-              result.specialInstructions = value;
-            }
-            Navigator.pop(context, result);
-          },
-          decoration: InputDecoration(
-            labelText: 'Preset Filters',
-            border: OutlineInputBorder(),
-          ),
-        ),
-      )),
-    );
   }
 
   List<String> getAvailableTypes(List<FilterRow> currentRows) {
