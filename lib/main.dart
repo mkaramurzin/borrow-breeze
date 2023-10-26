@@ -32,6 +32,10 @@ class MyApp extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             return MaterialApp(
+              themeMode: ThemeMode.dark,
+              darkTheme: ThemeData(
+                brightness: Brightness.dark,
+              ),
               initialRoute: '/',
               routes: {
                 '/': (context) => Wrapper(),

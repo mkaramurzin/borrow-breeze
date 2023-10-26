@@ -23,7 +23,6 @@ class _RegisterState extends State<Register> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         elevation: 0,
         title: Text(
@@ -38,7 +37,6 @@ class _RegisterState extends State<Register> {
             child: Container(
                 margin: EdgeInsets.only(top: 150),
                 decoration: BoxDecoration(
-                    color: Colors.white,
                     border: Border.all(color: Colors.grey, width: 1),
                     borderRadius: BorderRadius.circular(10)
                 ),
@@ -55,10 +53,10 @@ class _RegisterState extends State<Register> {
                           validator: (val) => val == '' ? 'Enter an email' : null,
                           decoration: InputDecoration(
                             labelText: 'Email',
+                            labelStyle: TextStyle(color: Colors.white),
                             border: new OutlineInputBorder(),
                             focusedBorder: OutlineInputBorder(),
                             filled: true,
-                            fillColor: Colors.grey[100],
                           ),
                           onChanged: (val) {
                             setState(() {
@@ -82,10 +80,10 @@ class _RegisterState extends State<Register> {
                           validator: (val) => val!.length < 6 ? 'Password must be at least 6 characters' : null,
                           decoration: InputDecoration(
                             labelText: 'Password',
+                            labelStyle: TextStyle(color: Colors.white),
                             border: new OutlineInputBorder(),
                             focusedBorder: OutlineInputBorder(),
                             filled: true,
-                            fillColor: Colors.grey[100],
                           ),
                           obscureText: true,
                           onChanged: (val) {
@@ -109,20 +107,9 @@ class _RegisterState extends State<Register> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            MouseRegion(
-                              cursor: SystemMouseCursors.click,
-                              child: RichText(text: TextSpan(
-                                text: 'Sign in',
-                                style: new TextStyle(color: Colors.blue),
-                                recognizer: new TapGestureRecognizer()
-                                  ..onTap = () {
-                                    widget.toggle();
-                                  }
-                              )),
-                            ),
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                  // backgroundColor: "#FFA611".toColor(),
+                                  backgroundColor: Color.fromARGB(255, 255, 232, 22),
                                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                                   elevation: 0,
                                   shape: RoundedRectangleBorder(
@@ -131,7 +118,7 @@ class _RegisterState extends State<Register> {
                               ),
                               child: Text(
                                 'Register',
-                                style: TextStyle(color: Colors.black),
+                                style: TextStyle(color: Colors.brown),
                               ),
                               onPressed: () async {
                                 if(_formKey.currentState!.validate()) {
@@ -144,6 +131,17 @@ class _RegisterState extends State<Register> {
                                   }
                                 }
                               },
+                            ),
+                            MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: RichText(text: TextSpan(
+                                text: 'Sign in',
+                                style: new TextStyle(color: Color.fromARGB(255, 255, 232, 22),),
+                                recognizer: new TapGestureRecognizer()
+                                  ..onTap = () {
+                                    widget.toggle();
+                                  }
+                              )),
                             ),
                           ],
                         ),

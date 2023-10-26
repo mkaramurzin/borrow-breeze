@@ -18,7 +18,6 @@ class _ResetPasswordState extends State<ResetPassword> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         elevation: 0,
         title: Text(
@@ -33,7 +32,6 @@ class _ResetPasswordState extends State<ResetPassword> {
             child: Container(
               margin: EdgeInsets.only(top: 150),
               decoration: BoxDecoration(
-                  color: Colors.white,
                   border: Border.all(color: Colors.grey, width: 1),
                   borderRadius: BorderRadius.circular(10)
               ),
@@ -49,10 +47,10 @@ class _ResetPasswordState extends State<ResetPassword> {
                           validator: (val) => val!.length < 1 ? 'Enter an email' : null,
                           decoration: InputDecoration(
                             labelText: 'Email',
+                            labelStyle: TextStyle(color: Colors.white),
                             border: new OutlineInputBorder(),
                             focusedBorder: OutlineInputBorder(),
                             filled: true,
-                            fillColor: Colors.grey[100],
                           ),
                           onChanged: (val) {
                             setState(() {
@@ -94,7 +92,7 @@ class _ResetPasswordState extends State<ResetPassword> {
                             Expanded(
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                    // backgroundColor: "#FFA611".toColor(),
+                                    backgroundColor: Color.fromARGB(255, 255, 232, 22),
                                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                                     elevation: 0,
                                     shape: RoundedRectangleBorder(
@@ -103,7 +101,7 @@ class _ResetPasswordState extends State<ResetPassword> {
                                 ),
                                 child: Text(
                                   'Reset Password',
-                                  style: TextStyle(color: Colors.black),
+                                  style: TextStyle(color: Color.fromARGB(255, 255, 232, 22)),
                                 ),
                                 onPressed: () async {
                                   if(_formKey.currentState!.validate()) {

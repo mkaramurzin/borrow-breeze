@@ -128,8 +128,8 @@ class _LoanViewState extends State<LoanView>
             },
             child: Text('Create Loan'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white, // Background color
-              foregroundColor: Colors.blue, // Text color
+              backgroundColor: Color.fromARGB(255, 255, 232, 22), // Background color
+              foregroundColor: Colors.brown, // Text color
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30.0),
               ),
@@ -137,13 +137,13 @@ class _LoanViewState extends State<LoanView>
           ),
 
           // TODO delete in production
-          ElevatedButton(
-            onPressed: () async {
-              await Database(uid: _auth.user!.uid).totalReset();
-              setState(() {});
-            },
-            child: Icon(Icons.autorenew),
-          ),
+          // ElevatedButton(
+          //   onPressed: () async {
+          //     await Database(uid: _auth.user!.uid).totalReset();
+          //     setState(() {});
+          //   },
+          //   child: Icon(Icons.autorenew),
+          // ),
 
           Container(
             margin: EdgeInsets.symmetric(horizontal: 20),
@@ -180,6 +180,7 @@ class _LoanViewState extends State<LoanView>
         ],
         bottom: TabBar(
           controller: _tabController,
+          indicatorColor: Colors.grey,
           tabs: [
             Tab(icon: Icon(Icons.list, size: 18.0)),
             Tab(icon: Icon(Icons.bar_chart, size: 18.0)),
@@ -225,22 +226,18 @@ class _LoanViewState extends State<LoanView>
                                       },
                                       child: Text(
                                         'Create a Loan',
-                                        style: TextStyle(fontSize: 18),
+                                        style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 255, 232, 22)),
                                       ),
                                       style: ButtonStyle(
                                         side: MaterialStateProperty.resolveWith(
                                             (states) => BorderSide(
-                                                color: Colors.blue, width: 2)),
+                                                color: Color.fromARGB(255, 255, 232, 22), width: 2)),
                                         padding:
                                             MaterialStateProperty.resolveWith(
                                                 (states) =>
                                                     EdgeInsets.symmetric(
                                                         vertical: 15.0,
                                                         horizontal: 25.0)),
-                                        textStyle:
-                                            MaterialStateProperty.resolveWith(
-                                                (states) =>
-                                                    TextStyle(fontSize: 18)),
                                       ),
                                     ),
                                   ),
@@ -253,22 +250,18 @@ class _LoanViewState extends State<LoanView>
                                       },
                                       child: Text(
                                         'Apply Filter',
-                                        style: TextStyle(fontSize: 18),
+                                        style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 255, 232, 22)),
                                       ),
                                       style: ButtonStyle(
                                         side: MaterialStateProperty.resolveWith(
                                             (states) => BorderSide(
-                                                color: Colors.blue, width: 2)),
+                                                color: Color.fromARGB(255, 255, 232, 22), width: 2)),
                                         padding:
                                             MaterialStateProperty.resolveWith(
                                                 (states) =>
                                                     EdgeInsets.symmetric(
                                                         vertical: 15.0,
                                                         horizontal: 25.0)),
-                                        textStyle:
-                                            MaterialStateProperty.resolveWith(
-                                                (states) =>
-                                                    TextStyle(fontSize: 18)),
                                       ),
                                     ),
                                   )
@@ -290,8 +283,8 @@ class _LoanViewState extends State<LoanView>
                       ),
                     ),
                     Container(
+                      color: Colors.grey[800],
                       height: MediaQuery.of(context).size.height * 0.05,
-                      color: Colors.blue,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [

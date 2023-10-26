@@ -24,7 +24,6 @@ class _SignInState extends State<SignIn> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         elevation: 0,
         title: Text(
@@ -39,7 +38,6 @@ class _SignInState extends State<SignIn> {
             child: Container(
                 margin: EdgeInsets.only(top: 150),
                 decoration: BoxDecoration(
-                    color: Colors.white,
                     border: Border.all(color: Colors.grey, width: 1),
                     borderRadius: BorderRadius.circular(10)
                 ),
@@ -56,10 +54,10 @@ class _SignInState extends State<SignIn> {
                           validator: (val) => val == '' ? 'Enter an email' : null,
                           decoration: InputDecoration(
                             labelText: 'Email',
+                            labelStyle: TextStyle(color: Colors.white),
                             border: new OutlineInputBorder(),
                             focusedBorder: OutlineInputBorder(),
                             filled: true,
-                            fillColor: Colors.grey[100],
                           ),
                           onChanged: (val) {
                             setState(() {
@@ -82,10 +80,10 @@ class _SignInState extends State<SignIn> {
                           validator: (val) => val!.length < 1 ? 'Enter a password' : null,
                           decoration: InputDecoration(
                             labelText: 'Password',
+                            labelStyle: TextStyle(color: Colors.white),
                             border: new OutlineInputBorder(),
                             focusedBorder: OutlineInputBorder(),
                             filled: true,
-                            fillColor: Colors.grey[100],
                           ),
                           obscureText: true,
                           onChanged: (val) {
@@ -112,7 +110,7 @@ class _SignInState extends State<SignIn> {
                               cursor: SystemMouseCursors.click,
                               child: RichText(text: TextSpan(
                                   text: 'Reset password',
-                                  style: new TextStyle(color: Colors.blue),
+                                  style: new TextStyle(color: Color.fromARGB(255, 255, 232, 22)),
                                   recognizer: new TapGestureRecognizer()
                                     ..onTap = () {
                                       Navigator.push(
@@ -128,7 +126,7 @@ class _SignInState extends State<SignIn> {
                               cursor: SystemMouseCursors.click,
                               child: RichText(text: TextSpan(
                                   text: 'Register',
-                                  style: new TextStyle(color: Colors.blue),
+                                  style: new TextStyle(color: Color.fromARGB(255, 255, 232, 22)),
                                   recognizer: new TapGestureRecognizer()
                                     ..onTap = () {
                                       widget.toggle();
@@ -143,7 +141,7 @@ class _SignInState extends State<SignIn> {
                             Expanded(
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                    // backgroundColor: "#FFA611".toColor(),
+                                    backgroundColor: Color.fromARGB(255, 255, 232, 22),
                                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                                     elevation: 0,
                                     shape: RoundedRectangleBorder(
@@ -152,7 +150,7 @@ class _SignInState extends State<SignIn> {
                                 ),
                                 child: Text(
                                   'Sign in',
-                                  style: TextStyle(color: Colors.black),
+                                  style: TextStyle(color: Colors.brown),
                                 ),
                                 onPressed: () async {
                                   if(_formKey.currentState!.validate()) {
