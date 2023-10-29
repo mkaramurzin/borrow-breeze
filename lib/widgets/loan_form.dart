@@ -585,6 +585,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
                         Map<String, dynamic> item = entry.value;
 
                         return Container(
+                          key: ValueKey(item),
                           margin: EdgeInsets.only(bottom: 10),
                           child: Row(
                             children: [
@@ -732,18 +733,22 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
         }
       }
       for (var item in verificationItems) {
-        if (!containsItem(
-            widget.loan!.verificationItems as List<Map<String, dynamic>>,
-            item)) {
+        if (!containsItem(widget.loan!.verificationItems, item)) {
           changes.add(
-              'VERIFICATION ITEM ADDED:\nLabel: ${item['label']} URL: ${item['url']}');
+              'VERIFICATION ITEM ADDED:\nLabel: ${item['label']}\nURL: ${item['url']}');
         }
       }
       widget.loan!.verificationItems = verificationItems;
 
       String changelogEntry = "${changes.join('\n')}\n\n";
       widget.loan!.changeLog += changelogEntry;
+      setState(() {
+        _isLoading = true;
+      });
       await Database(uid: _auth.user!.uid).updateLoan(widget.loan!);
+      setState(() {
+        _isLoading = false;
+      });
     } else {
       Loan newLoan = Loan(
           status: 'ongoing',

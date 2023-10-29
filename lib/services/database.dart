@@ -357,6 +357,18 @@ class Database {
   }
 
   Future<void> updateLoan(Loan loan) async {
+    // Upload images and replace File objects with URLs
+    for (int i = 0; i < loan.verificationItems.length; i++) {
+      var url = loan.verificationItems[i]['url'];
+      if (url is XFile) {
+        String imageUrl = await uploadImageAndGetUrl(url);
+        loan.verificationItems[i]['url'] = imageUrl;
+      } else if (url is html.File) {
+        String imageUrl = await uploadImageAndGetUrlWeb(url);
+        loan.verificationItems[i]['url'] = imageUrl;
+      }
+    }
+    
     await userCollection.doc(uid).collection('Loans').doc(loan.docID).update({
       'status': loan.status,
       'lender account': loan.lenderAccount,
