@@ -142,7 +142,7 @@ class _LoanFormDialogState extends State<LoanFormDialog> {
         double? enteredAmount = await showDialog(
           context: context,
           builder: (BuildContext context) {
-            return PaymentDialog();
+            return PaymentDialog(remainingDebt: repayAmount! - amountRepaid,);
           },
         );
         if (enteredAmount != null) {

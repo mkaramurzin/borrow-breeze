@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class PaymentDialog extends StatefulWidget {
-  const PaymentDialog({super.key});
+  final double remainingDebt;
+  const PaymentDialog({super.key, required this.remainingDebt});
 
   @override
   State<PaymentDialog> createState() => _PaymentDialogState();
@@ -10,7 +11,7 @@ class PaymentDialog extends StatefulWidget {
 class _PaymentDialogState extends State<PaymentDialog> {
   double amountRepaid = 0;
   late TextEditingController _controller;
-
+  final _formKey = GlobalKey<FormState>();
   String error = '';
 
   @override
@@ -26,16 +27,28 @@ class _PaymentDialogState extends State<PaymentDialog> {
       content: SingleChildScrollView(
         child: Column(
           children: [
-            TextFormField(
-              autofocus: true,
-              controller: _controller,
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: 'Enter Amount',
-                border: OutlineInputBorder(),
+            Form(
+              key: _formKey,
+              child: TextFormField(
+                autofocus: true,
+                controller: _controller,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: 'Enter Amount',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  double? enteredAmount = double.tryParse(value ?? '');
+                  if (enteredAmount != null && enteredAmount >= widget.remainingDebt) {
+                    return "Payment exceeds borrower's debt";
+                  }
+                  return null;
+                },
               ),
             ),
-            SizedBox(height: 10,),
+            SizedBox(
+              height: 10,
+            ),
             Text(
               error,
               style: TextStyle(color: Colors.red, fontSize: 14),
@@ -47,15 +60,12 @@ class _PaymentDialogState extends State<PaymentDialog> {
         ElevatedButton(
           child: Text("Submit"),
           onPressed: () {
-            double? enteredAmount = double.tryParse(_controller.text);
-            if (enteredAmount != null && enteredAmount > 0) {
-              amountRepaid = enteredAmount;
-              Navigator.of(context).pop(amountRepaid);
-            } else {
-              error = 'Please enter a valid payment amount';
-              setState(() {
-                
-              });
+            if (_formKey.currentState?.validate() ?? false) {
+              double? enteredAmount = double.tryParse(_controller.text);
+              if (enteredAmount != null && enteredAmount > 0) {
+                amountRepaid = enteredAmount;
+                Navigator.of(context).pop(amountRepaid);
+              }
             }
           },
         ),
