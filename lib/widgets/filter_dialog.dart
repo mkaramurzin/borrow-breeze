@@ -281,7 +281,7 @@ class _FilterDialogState extends State<FilterDialog> {
             content: SingleChildScrollView(
                 child: Center(
               child: DropdownButtonFormField(
-                items: [
+                items: [ // hardcoded preset filters
                   'all loans (no filter)',
                   'ongoing due today',
                   'ongoing due today + any overdue',

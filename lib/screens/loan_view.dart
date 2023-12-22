@@ -1,3 +1,4 @@
+import 'package:borrowbreeze/screens/cash_inputs_view.dart';
 import 'package:borrowbreeze/screens/metrics_view.dart';
 import 'package:borrowbreeze/services/excel_export.dart';
 import 'package:borrowbreeze/services/loan_logic.dart';
@@ -350,7 +351,7 @@ class _LoanViewState extends State<LoanView>
               },
             ),
             MetricsView(),
-            Center(child: Text('This is the Expenses Tab')),
+            CashInputView(),
           ]),
     );
   }

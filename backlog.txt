@@ -83,6 +83,14 @@ Users (collection)
                 originationDates (field)
                 repayDates (field)
                 preset (field)
+        Cash Inputs (collection)
+            Category (document)
+                name (field)
+                Entries (collection)
+                    Entry (document)
+                        label (field)
+                        amount (field)
+                        date (field)
 
 8/23/2023: halfway through development
 what's missing:
@@ -119,10 +127,8 @@ done    b. preset filters such as "loans due today", "loans due this week", "ove
     - High-level changelog to complement low-level changelog
     - Reminder system
 done    - Business Numbers display
-    - Miscellaneous Credit & Debit (Expenses) logging such as "Azure fee"
     - Color key
-    - Distribution tab
- done   - Excel export
+done    - Excel export
 done    - file upload for verification items
     - change origination and repay date pickers to a range of dates
     - quick visual indication of first time borrower

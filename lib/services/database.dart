@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:html' as html;
 import 'dart:typed_data';
+import 'package:borrowbreeze/models/cash_input.dart';
 import 'package:borrowbreeze/models/filter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:borrowbreeze/models/loan.dart';
@@ -133,7 +134,7 @@ class Database {
     Query loansQuery = loansCollection;
 
     if (filter != null) {
-      // special preset filters
+      // special preset filters START
       if (filter.specialInstructions == 'ongoing due today') {
         DateTime now = DateTime.now();
         DateTime startOfToday = DateTime(now.year, now.month, now.day, 0, 0, 0);
@@ -321,6 +322,7 @@ class Database {
         }
       }
     }
+    // special preset filters END
 
     if (filter != null && filter.sortOption != null) {
       // Apply the sort with Firestore
@@ -368,7 +370,7 @@ class Database {
         loan.verificationItems[i]['url'] = imageUrl;
       }
     }
-    
+
     await userCollection.doc(uid).collection('Loans').doc(loan.docID).update({
       'status': loan.status,
       'lender account': loan.lenderAccount,
@@ -494,6 +496,7 @@ class Database {
     return uniqueUsernames.toList();
   }
 
+  // currently unused and unfinished
   Future<List<LoanFilter>> fetchPresetFilters() async {
     QuerySnapshot snapshot = await FirebaseFirestore.instance
         .collection('Admin')
@@ -504,6 +507,69 @@ class Database {
     return snapshot.docs.map((doc) {
       return LoanFilter();
     }).toList();
+  }
+
+  // Cash Input related methods
+  // START
+
+  Future<void> addEntry(String categoryName, Entry entry) async {
+    // Navigating to the correct category inside Cash Inputs
+    CollectionReference categories =
+        userCollection.doc(uid).collection('Cash Inputs');
+
+    QuerySnapshot categorySnapshot =
+        await categories.where('name', isEqualTo: categoryName).get();
+
+    DocumentReference categoryDoc;
+
+    if (categorySnapshot.docs.isEmpty) {
+      // If the category doesn't exist, create a new document
+      categoryDoc = await categories.add({'name': categoryName});
+    } else {
+      // If the category exists, get its reference
+      categoryDoc = categorySnapshot.docs.first.reference;
+    }
+
+    // Accessing the Entries sub-collection
+    CollectionReference entriesCollection = categoryDoc.collection('Entries');
+
+    // Adding the entry to Firestore
+    await entriesCollection.add(entry.toFirestore());
+  }
+
+  Future<List<Entry>> getEntriesByCategory(String categoryName) async {
+    // Navigating to the correct category inside Cash Inputs
+    CollectionReference categories =
+        userCollection.doc(uid).collection('Cash Inputs');
+    QuerySnapshot categorySnapshot =
+        await categories.where('name', isEqualTo: categoryName).get();
+
+    if (categorySnapshot.docs.isEmpty) {
+      return [];
+    }
+
+    DocumentReference categoryDoc = categorySnapshot.docs.first.reference;
+
+    // Accessing the Entries sub-collection
+    CollectionReference entriesCollection = categoryDoc.collection('Entries');
+
+    // Querying all entries
+    QuerySnapshot entriesSnapshot = await entriesCollection.get();
+
+    // Converting the query results to a List of Entry objects
+    List<Entry> entries = entriesSnapshot.docs.map((doc) {
+      // Get the data from the document snapshot and handle the case where it may be null
+      var data = doc.data();
+      if (data != null) {
+        // If data is not null, use it to create an Entry object
+        return Entry.fromFirestore(data as Map<String, dynamic>);
+      } else {
+        // Handle the case where data is null if necessary, perhaps by throwing an error
+        throw Exception('Document data is null');
+      }
+    }).toList();
+
+    return entries;
   }
 
   // Business logic related section below
