@@ -12,9 +12,8 @@ class CashInputView extends StatefulWidget {
 class _CashInputViewState extends State<CashInputView> {
   final database = Database(uid: AuthService().user!.uid);
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _labelController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
-  final TextEditingController _dateController = TextEditingController();
+  DateTime _selectedDate = DateTime.now();
   String category1 = "Cash In";
   String category2 = "Cash Out";
 
@@ -28,8 +27,7 @@ class _CashInputViewState extends State<CashInputView> {
   Widget build(BuildContext context) {
     return FutureBuilder<Map<String, List<Entry>>>(
       future: _loadEntries(),
-      builder: (BuildContext context,
-          AsyncSnapshot<Map<String, List<Entry>>> snapshot) {
+      builder: (BuildContext context, AsyncSnapshot<Map<String, List<Entry>>> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
@@ -39,9 +37,7 @@ class _CashInputViewState extends State<CashInputView> {
           var cashOutEntries = snapshot.data!['cashOut']!;
           return Center(
             child: Container(
-              constraints: BoxConstraints(
-                  minWidth: 200,
-                  maxWidth: MediaQuery.of(context).size.width * 0.6),
+              constraints: BoxConstraints(minWidth: 200, maxWidth: MediaQuery.of(context).size.width * 0.6),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -49,18 +45,14 @@ class _CashInputViewState extends State<CashInputView> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       _buildAddEntryButton(category1),
-                      Expanded(
-                          child: _buildCategoryExpansionTile(
-                              category1, cashInEntries)),
+                      Expanded(child: _buildCategoryExpansionTile(category1, cashInEntries)),
                     ],
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       _buildAddEntryButton(category2),
-                      Expanded(
-                          child: _buildCategoryExpansionTile(
-                              category2, cashOutEntries)),
+                      Expanded(child: _buildCategoryExpansionTile(category2, cashOutEntries)),
                     ],
                   ),
                   SizedBox(),
@@ -80,8 +72,14 @@ class _CashInputViewState extends State<CashInputView> {
     return ExpansionTile(
       title: Center(child: Text(category)),
       childrenPadding: EdgeInsets.symmetric(vertical: 2, horizontal: 10),
-      children:
-          entries.map((entry) => ListTile(title: Text(entry.label))).toList(),
+      children: entries
+          .map((entry) => ListTile(
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [Text(entry.label), Text(entry.amount.toString()), Text(entry.date.toString())],
+                ),
+              ))
+          .toList(),
     );
   }
 
@@ -93,6 +91,11 @@ class _CashInputViewState extends State<CashInputView> {
   }
 
   Future<void> _showAddEntryDialog(String category) async {
+    List<String> dropdownOptions = category == "Cash In"
+        ? ["Equity", "Profit"]
+        : ["Expense", "Distribution", "Reimbursement", "Mainland Payment"];
+    String? selectedLabel = dropdownOptions.isNotEmpty ? dropdownOptions.first : null;
+
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -104,36 +107,43 @@ class _CashInputViewState extends State<CashInputView> {
               key: _formKey,
               child: Column(
                 children: <Widget>[
-                  TextFormField(
-                    controller: _labelController,
+                  DropdownButtonFormField<String>(
+                    value: selectedLabel,
                     decoration: InputDecoration(labelText: 'Label'),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a label';
-                      }
-                      return null;
+                    items: dropdownOptions.map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedLabel = newValue;
+                      });
                     },
+                    validator: (value) => value == null || value.isEmpty ? 'Please select a label' : null,
                   ),
                   TextFormField(
                     controller: _amountController,
                     decoration: InputDecoration(labelText: 'Amount'),
                     keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter an amount';
-                      }
-                      return null;
-                    },
+                    validator: (value) => value == null || value.isEmpty ? 'Please enter an amount' : null,
                   ),
-                  TextFormField(
-                    controller: _dateController,
-                    decoration: InputDecoration(labelText: 'Date (YYYY-MM-DD)'),
-                    keyboardType: TextInputType.datetime,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a date';
+                  ListTile(
+                    title: Text('Select Date'),
+                    subtitle: Text('${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}'),
+                    onTap: () async {
+                      final DateTime? picked = await showDatePicker(
+                        context: context,
+                        initialDate: _selectedDate,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2025),
+                      );
+                      if (picked != null && picked != _selectedDate) {
+                        setState(() {
+                          _selectedDate = picked;
+                        });
                       }
-                      return null;
                     },
                   ),
                 ],
@@ -152,7 +162,7 @@ class _CashInputViewState extends State<CashInputView> {
               child: Text('Add'),
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
-                  _addEntry(category);
+                  _addEntry(category, selectedLabel!);
                 }
               },
             ),
@@ -162,18 +172,12 @@ class _CashInputViewState extends State<CashInputView> {
     );
   }
 
-  void _clearTextFields() {
-    _labelController.clear();
-    _amountController.clear();
-    _dateController.clear();
-  }
-
-  Future<void> _addEntry(String category) async {
+  Future<void> _addEntry(String category, String label) async {
     try {
       Entry newEntry = Entry(
-        label: _labelController.text,
+        label: label,
         amount: double.parse(_amountController.text),
-        date: DateTime.parse(_dateController.text),
+        date: _selectedDate,
       );
 
       await database.addEntry(category, newEntry);
@@ -183,5 +187,9 @@ class _CashInputViewState extends State<CashInputView> {
     } catch (e) {
       print('Error adding entry: $e');
     }
+  }
+
+  void _clearTextFields() {
+    _amountController.clear();
   }
 }
