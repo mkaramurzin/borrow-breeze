@@ -23,11 +23,16 @@ class _CashInputViewState extends State<CashInputView> {
     return {'cashIn': cashInData, 'cashOut': cashOutData};
   }
 
+  String formatDate(DateTime date) {
+    return "${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}-${date.year}";
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Map<String, List<Entry>>>(
       future: _loadEntries(),
-      builder: (BuildContext context, AsyncSnapshot<Map<String, List<Entry>>> snapshot) {
+      builder: (BuildContext context,
+          AsyncSnapshot<Map<String, List<Entry>>> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
@@ -35,29 +40,37 @@ class _CashInputViewState extends State<CashInputView> {
         } else if (snapshot.hasData) {
           var cashInEntries = snapshot.data!['cashIn']!;
           var cashOutEntries = snapshot.data!['cashOut']!;
-          return Center(
-            child: Container(
-              constraints: BoxConstraints(minWidth: 200, maxWidth: MediaQuery.of(context).size.width * 0.6),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildAddEntryButton(category1),
-                      Expanded(child: _buildCategoryExpansionTile(category1, cashInEntries)),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildAddEntryButton(category2),
-                      Expanded(child: _buildCategoryExpansionTile(category2, cashOutEntries)),
-                    ],
-                  ),
-                  SizedBox(),
-                  SizedBox()
-                ],
+          return SingleChildScrollView(
+            child: Center(
+              child: Container(
+                constraints: BoxConstraints(
+                    minWidth: 200,
+                    maxWidth: MediaQuery.of(context).size.width * 0.6),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildAddEntryButton(category1),
+                        Expanded(
+                            child: _buildCategoryExpansionTile(
+                                category1, cashInEntries)),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildAddEntryButton(category2),
+                        Expanded(
+                            child: _buildCategoryExpansionTile(
+                                category2, cashOutEntries)),
+                      ],
+                    ),
+                    SizedBox(),
+                    SizedBox()
+                  ],
+                ),
               ),
             ),
           );
@@ -72,14 +85,25 @@ class _CashInputViewState extends State<CashInputView> {
     return ExpansionTile(
       title: Center(child: Text(category)),
       childrenPadding: EdgeInsets.symmetric(vertical: 2, horizontal: 10),
-      children: entries
-          .map((entry) => ListTile(
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [Text(entry.label), Text(entry.amount.toString()), Text(entry.date.toString())],
+      children: entries.asMap().map((index, entry) {
+            Color bgColor = index % 2 == 0 ? Color.fromARGB(255, 63, 62, 62) : Colors.transparent;
+            return MapEntry(
+              index,
+              Container(
+                color: bgColor,
+                child: ListTile(
+                  title: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(entry.label),
+                      Text("\$${entry.amount}"),
+                      Text(entry.date.toString())
+                    ],
+                  ),
                 ),
-              ))
-          .toList(),
+              ),
+            );
+          }).values.toList(),
     );
   }
 
@@ -94,7 +118,8 @@ class _CashInputViewState extends State<CashInputView> {
     List<String> dropdownOptions = category == "Cash In"
         ? ["Equity", "Profit"]
         : ["Expense", "Distribution", "Reimbursement", "Mainland Payment"];
-    String? selectedLabel = dropdownOptions.isNotEmpty ? dropdownOptions.first : null;
+    String? selectedLabel =
+        dropdownOptions.isNotEmpty ? dropdownOptions.first : null;
 
     return showDialog<void>(
       context: context,
@@ -110,7 +135,8 @@ class _CashInputViewState extends State<CashInputView> {
                   DropdownButtonFormField<String>(
                     value: selectedLabel,
                     decoration: InputDecoration(labelText: 'Label'),
-                    items: dropdownOptions.map<DropdownMenuItem<String>>((String value) {
+                    items: dropdownOptions
+                        .map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
                         child: Text(value),
@@ -121,17 +147,21 @@ class _CashInputViewState extends State<CashInputView> {
                         selectedLabel = newValue;
                       });
                     },
-                    validator: (value) => value == null || value.isEmpty ? 'Please select a label' : null,
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Please select a label'
+                        : null,
                   ),
                   TextFormField(
                     controller: _amountController,
                     decoration: InputDecoration(labelText: 'Amount'),
                     keyboardType: TextInputType.number,
-                    validator: (value) => value == null || value.isEmpty ? 'Please enter an amount' : null,
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Please enter an amount'
+                        : null,
                   ),
                   ListTile(
                     title: Text('Select Date'),
-                    subtitle: Text('${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}'),
+                    subtitle: Text(formatDate(_selectedDate)),
                     onTap: () async {
                       final DateTime? picked = await showDatePicker(
                         context: context,
@@ -177,7 +207,7 @@ class _CashInputViewState extends State<CashInputView> {
       Entry newEntry = Entry(
         label: label,
         amount: double.parse(_amountController.text),
-        date: _selectedDate,
+        date: formatDate(_selectedDate),
       );
 
       await database.addEntry(category, newEntry);

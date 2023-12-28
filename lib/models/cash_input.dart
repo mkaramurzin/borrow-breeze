@@ -25,7 +25,7 @@ class Category {
 class Entry {
   String label;
   double amount;
-  DateTime date;
+  String date;
 
   Entry({required this.label, required this.amount, required this.date});
 
@@ -34,7 +34,7 @@ class Entry {
     return Entry(
       label: firestoreData['label'],
       amount: firestoreData['amount'],
-      date: (firestoreData['date'] as Timestamp).toDate(),
+      date: firestoreData['date'],
     );
   }
 
@@ -43,7 +43,7 @@ class Entry {
     return {
       'label': label,
       'amount': amount,
-      'date': Timestamp.fromDate(date),
+      'date': date,
     };
   }
 }

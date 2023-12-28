@@ -535,6 +535,10 @@ class Database {
 
     // Adding the entry to Firestore
     await entriesCollection.add(entry.toFirestore());
+
+    if (entry.label == "Equity") {
+      await _updateOwnerEquity(entry.amount);
+    } else if (entry.label == "Distribution") {}
   }
 
   Future<List<Entry>> getEntriesByCategory(String categoryName) async {
@@ -704,6 +708,22 @@ class Database {
 
   Future<void> handleRepayChange(Loan loan, double newAmount) async {
     _updateProjectedProfit(newAmount - loan.repayAmount);
+  }
+
+  Future<void> _updateOwnerEquity(double amount) async {
+    DocumentSnapshot userDoc = await userCollection.doc(uid).get();
+
+    if (userDoc.exists) {
+      // If the document exists, increment (or create) the value
+      await userCollection
+          .doc(uid)
+          .update({'equity': FieldValue.increment(amount)});
+    } else {
+      // If the document doesn't exist, set the value
+      await userCollection
+          .doc(uid)
+          .set({'equity': amount}, SetOptions(merge: true));
+    }
   }
 
   Future<void> _updateTotalLoanCount(int amount, String type) async {
